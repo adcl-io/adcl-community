@@ -2,7 +2,7 @@
 
 AI-Driven Cyber Lab (ADCL) Platform - Open source AI agent orchestration system.
 
-**Version:** 0.1.16
+**Version:** 0.1.17
 
 ## What is ADCL?
 
@@ -10,17 +10,10 @@ ADCL is a modular platform for orchestrating AI agents with specialized capabili
 
 ## Quick Start
 
-Install ADCL with one command:
-
 ```bash
+mkdir adcl && cd adcl
 curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/install.sh | bash
 ```
-
-This will:
-1. Clone the repository to `~/.adcl`
-2. Pull Docker images from GHCR
-3. Set up configuration
-4. Start the platform
 
 Access the UI at: **http://localhost:3000**
 
@@ -78,9 +71,12 @@ REGISTRY_PORT=9000
 ## Directory Structure
 
 ```
-~/.adcl/
+adcl/
 ├── docker-compose.yml       # Service definitions
 ├── .env                     # Configuration (API keys, ports)
+├── start.sh                 # Start services
+├── stop.sh                  # Stop services
+├── clean-restart.sh         # Clean restart
 ├── mcp_servers/            # MCP server source code
 ├── registry/               # Package registry
 ├── agent-definitions/      # Agent configurations
@@ -93,9 +89,9 @@ REGISTRY_PORT=9000
 ## Docker Images
 
 Images are hosted on GitHub Container Registry (GHCR):
-- `ghcr.io/adcl-io/adcl-community/orchestrator:0.1.16`
-- `ghcr.io/adcl-io/adcl-community/frontend:0.1.16`
-- `ghcr.io/adcl-io/adcl-community/registry:0.1.16`
+- `ghcr.io/adcl-io/adcl-community/orchestrator:0.1.17`
+- `ghcr.io/adcl-io/adcl-community/frontend:0.1.17`
+- `ghcr.io/adcl-io/adcl-community/registry:0.1.17`
 
 ## Usage
 
@@ -114,28 +110,12 @@ The orchestrator exposes a REST API at http://localhost:8000
 ### Commands
 
 ```bash
-cd ~/.adcl  # or your installation directory
-
-# Start services
-docker compose up -d
-
-# Stop services
-docker compose down
-
-# View logs
-docker compose logs -f
-
-# View specific service logs
-docker compose logs -f orchestrator
-
-# Check status
-docker compose ps
-
-# Restart a service
-docker compose restart orchestrator
-
-# Update to latest version
-curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/install.sh | bash
+./start.sh                         # Start all services
+./stop.sh                          # Stop all services
+./clean-restart.sh                 # Clean restart
+docker compose ps                  # Check status
+docker compose logs -f             # View all logs
+docker compose logs -f orchestrator  # View specific service
 ```
 
 ## Troubleshooting
@@ -151,8 +131,8 @@ curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/install
 - Check Docker network: `docker network ls | grep adcl`
 
 ### API keys not working
-- Verify keys in `.env` file: `cat ~/.adcl/.env`
-- Restart orchestrator: `docker compose restart orchestrator`
+- Verify keys in `.env` file: `cat .env`
+- Restart orchestrator: `./clean-restart.sh`
 
 ## Development
 

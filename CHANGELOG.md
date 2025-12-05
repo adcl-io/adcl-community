@@ -1,3 +1,9 @@
+## [0.1.17] - 2025-12-05
+
+### Changes
+- Fix orchestrator startup - copy configs directory
+- Simplify community install - no hidden dirs, include all scripts
+
 ## [0.1.16] - 2025-12-05
 
 ### Changes
