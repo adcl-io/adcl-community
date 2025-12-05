@@ -48,7 +48,7 @@ Docker images are hosted on GitHub Container Registry (GHCR):
 
 ## Version
 
-Current version: **0.1.11**
+Current version: **0.1.12**
 
 ## License
 
