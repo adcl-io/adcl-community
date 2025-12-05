@@ -1,3 +1,8 @@
+## [0.1.18] - 2025-12-05
+
+### Changes
+- Add configs volume mount to orchestrator
+
 ## [0.1.17] - 2025-12-05
 
 ### Changes

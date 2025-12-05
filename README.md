@@ -2,7 +2,7 @@
 
 AI-Driven Cyber Lab (ADCL) Platform - Open source AI agent orchestration system.
 
-**Version:** 0.1.17
+**Version:** 0.1.18
 
 ## What is ADCL?
 
@@ -89,9 +89,9 @@ adcl/
 ## Docker Images
 
 Images are hosted on GitHub Container Registry (GHCR):
-- `ghcr.io/adcl-io/adcl-community/orchestrator:0.1.17`
-- `ghcr.io/adcl-io/adcl-community/frontend:0.1.17`
-- `ghcr.io/adcl-io/adcl-community/registry:0.1.17`
+- `ghcr.io/adcl-io/adcl-community/orchestrator:0.1.18`
+- `ghcr.io/adcl-io/adcl-community/frontend:0.1.18`
+- `ghcr.io/adcl-io/adcl-community/registry:0.1.18`
 
 ## Usage
 
