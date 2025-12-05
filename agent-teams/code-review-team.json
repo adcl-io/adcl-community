@@ -1,0 +1,37 @@
+{
+  "name": "Code Review Team",
+  "description": "Collaborative code review and quality assurance team",
+  "version": "1.0.1",
+  "available_mcps": [
+    "agent",
+    "file_tools"
+  ],
+  "agents": [
+    {
+      "agent_id": "code-reviewer",
+      "role": "Code Reviewer",
+      "responsibilities": [
+        "Code analysis and review"
+      ],
+      "mcp_access": []
+    },
+    {
+      "agent_id": "research-assistant",
+      "role": "Documentation Writer",
+      "responsibilities": [
+        "File reading and documentation"
+      ],
+      "mcp_access": []
+    }
+  ],
+  "coordination": {
+    "mode": "sequential",
+    "share_context": true,
+    "task_distribution": "automatic"
+  },
+  "tags": [
+    "code-review",
+    "quality-assurance"
+  ],
+  "author": "User"
+}

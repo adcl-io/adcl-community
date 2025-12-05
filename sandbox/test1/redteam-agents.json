@@ -1,0 +1,162 @@
+{
+  "version": "0.2",
+  "models": [
+    {
+      "model": "gpt-4-turbo-preview",
+      "name": "planning_model",
+      "api_type": "openai",
+      "api_key": "${OPENAI_API_KEY}",
+      "temperature": 0.7,
+      "max_tokens": 2000,
+      "top_p": 0.95
+    },
+    {
+      "model": "gpt-3.5-turbo",
+      "name": "execution_model",
+      "api_type": "openai",
+      "api_key": "${OPENAI_API_KEY}",
+      "temperature": 0.3,
+      "max_tokens": 1000
+    }
+  ],
+  "skills": [
+    {
+      "name": "scan_network",
+      "description": "Perform network reconnaissance",
+      "content": "import subprocess\nimport json\n\ndef scan_network(target_ip: str, port_range: str = '1-1000') -> dict:\n    \"\"\"Scan network for open ports and services\"\"\"\n    try:\n        # Run nmap in safe mode\n        cmd = f'nmap -sS -sV -p{port_range} --max-rate=100 {target_ip} -oX -'\n        result = subprocess.run(cmd.split(), capture_output=True, text=True, timeout=60)\n        \n        # Parse results\n        open_ports = []\n        services = {}\n        \n        # Simplified parsing - in production use python-nmap\n        for line in result.stdout.split('\\n'):\n            if 'open' in line:\n                parts = line.split()\n                if len(parts) >= 3:\n                    port = parts[0].split('/')[0]\n                    service = parts[2] if len(parts) > 2 else 'unknown'\n                    open_ports.append(port)\n                    services[port] = service\n        \n        return {\n            'success': True,\n            'target': target_ip,\n            'open_ports': open_ports,\n            'services': services,\n            'total_ports_scanned': port_range\n        }\n    except Exception as e:\n        return {'success': False, 'error': str(e)}",
+      "permission": "admin"
+    },
+    {
+      "name": "identify_vulnerabilities",
+      "description": "Identify potential vulnerabilities in discovered services",
+      "content": "import requests\nimport json\n\ndef identify_vulnerabilities(services: dict, target_ip: str) -> dict:\n    \"\"\"Identify potential vulnerabilities based on service versions\"\"\"\n    vulnerabilities = []\n    risk_score = 0\n    \n    # Vulnerability database (simplified - use real CVE database in production)\n    vuln_db = {\n        'ssh': {\n            'OpenSSH_7.4': ['CVE-2018-15473', 'Username enumeration'],\n            'OpenSSH_6': ['CVE-2016-10012', 'Denial of service']\n        },\n        'http': {\n            'Apache/2.4.29': ['CVE-2019-0211', 'Privilege escalation'],\n            'nginx/1.14': ['CVE-2019-9511', 'HTTP/2 DoS']\n        },\n        'mysql': {\n            '5.7': ['CVE-2023-21912', 'Remote code execution'],\n            '5.6': ['CVE-2016-6662', 'Privilege escalation']\n        }\n    }\n    \n    for port, service_info in services.items():\n        service_type = service_info.lower()\n        \n        # Check for known vulnerabilities\n        for vuln_service, versions in vuln_db.items():\n            if vuln_service in service_type:\n                for version, vulns in versions.items():\n                    if version.lower() in service_type.lower():\n                        vulnerabilities.append({\n                            'port': port,\n                            'service': service_info,\n                            'cve': vulns[0],\n                            'description': vulns[1],\n                            'severity': 'high' if 'execution' in vulns[1].lower() else 'medium'\n                        })\n                        risk_score += 10 if 'execution' in vulns[1].lower() else 5\n    \n    return {\n        'success': True,\n        'vulnerabilities': vulnerabilities,\n        'risk_score': min(risk_score, 100),\n        'recommendation': 'Proceed with exploitation' if risk_score > 30 else 'Continue reconnaissance'\n    }",
+      "permission": "user"
+    },
+    {
+      "name": "generate_exploit_payload",
+      "description": "Generate adaptive exploit payload",
+      "content": "import base64\nimport hashlib\nimport json\n\ndef generate_exploit_payload(vulnerability: dict, evasion_level: str = 'medium') -> dict:\n    \"\"\"Generate exploit payload with evasion techniques\"\"\"\n    \n    payload_templates = {\n        'CVE-2019-0211': {\n            'base': 'exec(/bin/sh)',\n            'obfuscated': base64.b64encode(b'exec(/bin/sh)').decode(),\n            'encoded': '\\\\x65\\\\x78\\\\x65\\\\x63\\\\x28\\\\x2f\\\\x62\\\\x69\\\\x6e\\\\x2f\\\\x73\\\\x68\\\\x29'\n        },\n        'CVE-2023-21912': {\n            'base': \"SELECT * FROM mysql.user; DROP TABLE logs;\",\n            'obfuscated': \"SELECT/**/*/**/FROM/**/mysql.user;/**/DROP/**/TABLE/**/logs;\",\n            'encoded': \"0x53454c454354\"\n        }\n    }\n    \n    evasion_techniques = {\n        'low': ['none'],\n        'medium': ['base64', 'url_encoding', 'comment_injection'],\n        'high': ['polymorphic', 'encryption', 'timing_based']\n    }\n    \n    cve = vulnerability.get('cve', 'generic')\n    payload = payload_templates.get(cve, {'base': 'generic_payload'})\n    \n    # Apply evasion based on level\n    if evasion_level == 'medium':\n        payload_content = payload.get('obfuscated', payload['base'])\n    elif evasion_level == 'high':\n        payload_content = payload.get('encoded', payload['base'])\n    else:\n        payload_content = payload['base']\n    \n    return {\n        'success': True,\n        'payload': payload_content,\n        'evasion_techniques': evasion_techniques[evasion_level],\n        'delivery_method': 'http_request' if 'http' in str(vulnerability) else 'direct',\n        'estimated_success_rate': 75 if evasion_level == 'high' else 50\n    }",
+      "permission": "admin"
+    },
+    {
+      "name": "test_exploit",
+      "description": "Safely test exploit in sandboxed environment",
+      "content": "import time\nimport random\nimport json\n\ndef test_exploit(target: str, payload: dict, safe_mode: bool = True) -> dict:\n    \"\"\"Test exploit with safety controls\"\"\"\n    \n    if safe_mode and not target.startswith('demo.') and not target.startswith('test.'):\n        return {\n            'success': False,\n            'error': 'Safety check failed - only demo/test targets allowed',\n            'blocked_by': 'safety_control'\n        }\n    \n    # Simulate exploit execution\n    time.sleep(random.uniform(0.5, 2.0))  # Simulate network delay\n    \n    # Simulate different outcomes\n    outcome_probability = random.random()\n    \n    if outcome_probability < 0.3:\n        # Blocked by security control\n        blockers = ['WAF', 'IDS', 'EDR', 'Firewall']\n        return {\n            'success': False,\n            'blocked_by': random.choice(blockers),\n            'detection_point': 'payload_signature',\n            'recommendation': 'increase_evasion'\n        }\n    elif outcome_probability < 0.4:\n        # Partial success\n        return {\n            'success': 'partial',\n            'access_level': 'low_privilege_shell',\n            'next_step': 'privilege_escalation',\n            'stability': 'unstable'\n        }\n    else:\n        # Success\n        return {\n            'success': True,\n            'access_level': 'system' if outcome_probability > 0.8 else 'user',\n            'session_id': hashlib.md5(str(time.time()).encode()).hexdigest()[:8],\n            'persistence': 'established',\n            'data_accessible': True\n        }\n    \n    return result",
+      "permission": "admin"
+    },
+    {
+      "name": "adapt_payload",
+      "description": "Adapt payload based on detection",
+      "content": "import random\nimport string\nimport json\n\ndef adapt_payload(original_payload: str, blocked_by: str, attempt_number: int = 1) -> dict:\n    \"\"\"Adapt payload based on what blocked it\"\"\"\n    \n    adaptations = {\n        'WAF': {\n            'techniques': ['add_encoding', 'split_payload', 'use_unicode'],\n            'description': 'Web Application Firewall evasion'\n        },\n        'IDS': {\n            'techniques': ['fragment_packets', 'timing_delay', 'encrypt_channel'],\n            'description': 'Intrusion Detection System evasion'\n        },\n        'EDR': {\n            'techniques': ['process_hollowing', 'dll_injection', 'living_off_land'],\n            'description': 'Endpoint Detection Response evasion'\n        },\n        'Firewall': {\n            'techniques': ['port_hopping', 'protocol_tunneling', 'covert_channel'],\n            'description': 'Network Firewall evasion'\n        }\n    }\n    \n    # Select adaptation strategy\n    strategy = adaptations.get(blocked_by, {'techniques': ['generic_obfuscation']})\n    selected_technique = strategy['techniques'][min(attempt_number-1, len(strategy['techniques'])-1)]\n    \n    # Apply adaptation\n    adapted_payload = original_payload\n    \n    if selected_technique == 'add_encoding':\n        # URL encode special characters\n        adapted_payload = adapted_payload.replace(' ', '%20').replace('/', '%2F')\n    elif selected_technique == 'split_payload':\n        # Split into chunks\n        adapted_payload = ''.join([original_payload[i:i+2] + '/**/' for i in range(0, len(original_payload), 2)])\n    elif selected_technique == 'timing_delay':\n        # Add sleep statements\n        adapted_payload = f\"sleep(0.{random.randint(1,9)});{original_payload}\"\n    elif selected_technique == 'living_off_land':\n        # Use legitimate tools\n        adapted_payload = f\"powershell.exe -enc {base64.b64encode(original_payload.encode()).decode()}\"\n    else:\n        # Generic obfuscation\n        noise = ''.join(random.choices(string.ascii_letters, k=5))\n        adapted_payload = f\"/*{noise}*/{original_payload}/*{noise}*/\"\n    \n    return {\n        'success': True,\n        'adapted_payload': adapted_payload,\n        'technique_used': selected_technique,\n        'description': strategy.get('description', 'Generic adaptation'),\n        'confidence': max(0.4, 0.9 - (attempt_number * 0.1))\n    }",
+      "permission": "user"
+    },
+    {
+      "name": "generate_report",
+      "description": "Generate executive and technical reports",
+      "content": "import json\nimport datetime\n\ndef generate_report(mission_results: dict, report_type: str = 'executive') -> dict:\n    \"\"\"Generate comprehensive penetration test report\"\"\"\n    \n    timestamp = datetime.datetime.now().isoformat()\n    \n    if report_type == 'executive':\n        # Executive summary\n        total_vulns = len(mission_results.get('vulnerabilities', []))\n        critical_vulns = sum(1 for v in mission_results.get('vulnerabilities', []) \n                           if v.get('severity') == 'high')\n        \n        report = {\n            'report_type': 'Executive Summary',\n            'generated': timestamp,\n            'overall_risk': 'HIGH' if critical_vulns > 2 else 'MEDIUM' if total_vulns > 5 else 'LOW',\n            'key_findings': [\n                f\"Discovered {total_vulns} vulnerabilities\",\n                f\"{critical_vulns} critical issues requiring immediate attention\",\n                f\"Successfully gained access to {mission_results.get('access_level', 'none')} privileges\"\n            ],\n            'recommendations': [\n                'Immediate patching of critical vulnerabilities',\n                'Implement network segmentation',\n                'Deploy advanced threat detection'\n            ],\n            'business_impact': 'Potential for data breach and regulatory fines'\n        }\n    else:\n        # Technical report\n        report = {\n            'report_type': 'Technical Details',\n            'generated': timestamp,\n            'attack_chain': mission_results.get('attack_chain', []),\n            'vulnerabilities': mission_results.get('vulnerabilities', []),\n            'exploitation_details': {\n                'successful_exploits': mission_results.get('successful_exploits', []),\n                'failed_attempts': mission_results.get('failed_attempts', []),\n                'adaptations_used': mission_results.get('adaptations', [])\n            },\n            'indicators_of_compromise': [\n                'Unusual network traffic on ports ' + str(mission_results.get('ports_used', [])),\n                'Process creation: ' + str(mission_results.get('processes_created', [])),\n                'Files modified: ' + str(mission_results.get('files_touched', []))\n            ],\n            'remediation_steps': [\n                'Apply security patches for identified CVEs',\n                'Configure firewall rules to block attack vectors',\n                'Implement application whitelisting'\n            ]\n        }\n    \n    return {\n        'success': True,\n        'report': report,\n        'export_formats': ['json', 'pdf', 'html'],\n        'classification': 'CONFIDENTIAL'\n    }",
+      "permission": "user"
+    }
+  ],
+  "agents": [
+    {
+      "name": "MissionCommander",
+      "type": "assistant",
+      "description": "Orchestrates the entire red team operation",
+      "model": "planning_model",
+      "system_message": "You are the Mission Commander for an AI-powered red team operation. Your role is to:\n\n1. Analyze the target environment\n2. Create a comprehensive attack plan\n3. Coordinate other agents (Recon, Exploit, Adaptation, Report)\n4. Ensure safety and compliance\n5. Adapt strategies based on results\n\nAlways prioritize:\n- Safety (never damage production systems)\n- Stealth (avoid detection when possible)\n- Effectiveness (achieve objectives efficiently)\n- Learning (document what works and what doesn't)\n\nFor each mission, create a step-by-step plan and delegate tasks to specialized agents.",
+      "skills": ["scan_network", "identify_vulnerabilities", "generate_report"],
+      "max_consecutive_auto_reply": 10
+    },
+    {
+      "name": "ReconAgent",
+      "type": "assistant", 
+      "description": "Performs reconnaissance and information gathering",
+      "model": "execution_model",
+      "system_message": "You are a Reconnaissance Specialist. Your responsibilities:\n\n1. Perform network scanning and enumeration\n2. Identify services and versions\n3. Discover potential vulnerabilities\n4. Map the attack surface\n5. Gather intelligence while remaining undetected\n\nUse the scan_network and identify_vulnerabilities functions to gather information. Report all findings back to the Mission Commander with risk assessments.",
+      "skills": ["scan_network", "identify_vulnerabilities"],
+      "max_consecutive_auto_reply": 5
+    },
+    {
+      "name": "ExploitAgent",
+      "type": "assistant",
+      "description": "Executes exploits and gains access",
+      "model": "execution_model",
+      "system_message": "You are an Exploitation Specialist. Your tasks:\n\n1. Generate appropriate exploit payloads\n2. Test exploits safely\n3. Establish access to target systems\n4. Maintain persistence\n5. Escalate privileges when possible\n\nAlways validate targets are in safe testing range (demo.* or test.*). Use generate_exploit_payload and test_exploit functions. If blocked, request adaptation from AdaptationAgent.",
+      "skills": ["generate_exploit_payload", "test_exploit"],
+      "max_consecutive_auto_reply": 5
+    },
+    {
+      "name": "AdaptationAgent",
+      "type": "assistant",
+      "description": "Adapts strategies when attacks are blocked",
+      "model": "planning_model",
+      "system_message": "You are the Adaptation Specialist - the key differentiator of our AI red team. Your critical role:\n\n1. Analyze why attacks failed\n2. Generate creative adaptations\n3. Modify payloads to bypass defenses\n4. Learn from each failure\n5. Build a knowledge base of successful techniques\n\nWhen an attack is blocked, determine:\n- What security control blocked it (WAF, IDS, EDR, etc.)\n- Why it was detected (signature, behavior, anomaly)\n- How to modify approach (encoding, timing, technique change)\n\nUse adapt_payload function and suggest new strategies. This is what makes us AI-powered, not just automated.",
+      "skills": ["adapt_payload", "generate_exploit_payload"],
+      "max_consecutive_auto_reply": 8
+    },
+    {
+      "name": "ReportAgent",
+      "type": "assistant",
+      "description": "Generates comprehensive reports",
+      "model": "execution_model",
+      "system_message": "You are the Reporting Specialist. Your duties:\n\n1. Document all mission activities\n2. Generate executive summaries\n3. Create technical reports\n4. Calculate risk scores\n5. Provide remediation recommendations\n\nUse generate_report function to create both executive and technical reports. Ensure all findings are clearly documented with business impact assessments.",
+      "skills": ["generate_report"],
+      "max_consecutive_auto_reply": 3
+    },
+    {
+      "name": "SafetyOfficer",
+      "type": "assistant",
+      "description": "Ensures all operations remain safe and compliant",
+      "model": "execution_model",
+      "system_message": "You are the Safety Officer. Your critical responsibilities:\n\n1. Validate all targets are authorized\n2. Prevent damage to production systems\n3. Ensure compliance with rules of engagement\n4. Monitor for unintended consequences\n5. Implement immediate stop if safety violated\n\nYou have VETO power over any operation. Only approve actions against demo.* or test.* domains in safe mode. Review all exploit attempts before execution.",
+      "skills": [],
+      "max_consecutive_auto_reply": 2
+    }
+  ],
+  "workflows": [
+    {
+      "name": "StandardPentest",
+      "description": "Standard penetration testing workflow",
+      "agents": ["MissionCommander", "ReconAgent", "ExploitAgent", "AdaptationAgent", "ReportAgent", "SafetyOfficer"],
+      "type": "sequential",
+      "settings": {
+        "max_rounds": 20,
+        "admin_approval": false,
+        "safety_mode": true
+      }
+    },
+    {
+      "name": "AdaptiveExploit",
+      "description": "Focused workflow for adaptive exploitation",
+      "agents": ["ExploitAgent", "AdaptationAgent", "SafetyOfficer"],
+      "type": "autonomous",
+      "settings": {
+        "max_rounds": 10,
+        "admin_approval": true,
+        "safety_mode": true,
+        "max_adaptations": 5
+      }
+    },
+    {
+      "name": "QuickRecon",
+      "description": "Fast reconnaissance only",
+      "agents": ["ReconAgent", "ReportAgent"],
+      "type": "sequential",
+      "settings": {
+        "max_rounds": 5,
+        "admin_approval": false,
+        "safety_mode": true
+      }
+    }
+  ],
+  "config": {
+    "default_workflow": "StandardPentest",
+    "safety_enabled": true,
+    "max_parallel_operations": 3,
+    "audit_logging": true,
+    "rollback_enabled": true,
+    "allowed_targets": ["demo.*", "test.*", "localhost", "192.168.*"],
+    "blocked_targets": ["prod.*", "*.gov", "*.mil", "*.edu"],
+    "risk_threshold": "medium"
+  }
+}

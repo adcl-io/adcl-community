@@ -1,0 +1,31 @@
+{
+  "name": "Test Security Team",
+  "description": "Test team with new schema",
+  "version": "1.0.0",
+  "available_mcps": [
+    "nmap_recon",
+    "file_tools"
+  ],
+  "agents": [
+    {
+      "agent_id": "security-analyst",
+      "role": "Lead Security Analyst",
+      "responsibilities": [
+        "Network scanning"
+      ],
+      "mcp_access": [
+        "nmap_recon",
+        "file_tools"
+      ]
+    }
+  ],
+  "coordination": {
+    "mode": "sequential",
+    "share_context": true,
+    "task_distribution": "automatic"
+  },
+  "tags": [
+    "security"
+  ],
+  "author": "Testing"
+}

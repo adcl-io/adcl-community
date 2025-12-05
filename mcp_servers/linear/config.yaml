@@ -1,0 +1,19 @@
+# Linear MCP Server Configuration
+# Linear API integration via OAuth
+
+service:
+  name: "linear"
+  port: 7005
+  host: "0.0.0.0"
+  description: "Linear API integration via MCP"
+
+linear:
+  client_id: "${LINEAR_CLIENT_ID}"
+  client_secret: "${LINEAR_CLIENT_SECRET}"
+  token_file: "/app/volumes/credentials/linear-tokens.json"
+  api_url: "https://api.linear.app/graphql"
+
+deployment:
+  container_name: "mcp-linear"
+  network_mode: "bridge"
+  restart_policy: "unless-stopped"

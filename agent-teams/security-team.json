@@ -1,0 +1,22 @@
+{
+  "name": "Security Analysis Team",
+  "description": "Comprehensive network security scanning and analysis",
+  "version": "1.0.0",
+  "agents": [
+    {
+      "name": "Scanner",
+      "role": "Network Scanner",
+      "mcp_server": "nmap_recon"
+    },
+    {
+      "name": "Security Analyst",
+      "role": "Security Expert",
+      "mcp_server": "agent"
+    },
+    {
+      "name": "Reporter",
+      "role": "Documentation Specialist",
+      "mcp_server": "file_tools"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+# ADCL Services Configuration
+# All service configurations in one place following Unix philosophy
+
+# Service Ports
+services:
+  orchestrator:
+    port: 8000
+    host: "0.0.0.0"
+
+  frontend:
+    port: 3000
+    host: "0.0.0.0"
+
+  registry:
+    port: 9000
+    host: "0.0.0.0"
+
+  mcp_servers:
+    agent:
+      port: 7000
+      host: "0.0.0.0"
+    file_tools:
+      port: 7002
+      host: "0.0.0.0"
+    nmap_recon:
+      port: 7003
+      host: "0.0.0.0"
+    history:
+      port: 7004
+      host: "0.0.0.0"
+
+# File Paths (Container Paths)
+paths:
+  # Backend paths
+  agent_definitions: "/app/agent-definitions"
+  agent_teams: "/app/agent-teams"
+  workflows: "/app/workflows"
+  registries_conf: "/app/registries.conf"
+  logs: "/app/logs"
+  logs_shared: "/app/logs_shared"
+  mcp_servers: "/app/mcp_servers"
+  workspace_shared: "/app/workspace_shared"
+
+  # History storage
+  history_storage: "/app/volumes/conversations"
+
+  # Registry paths
+  registry_data: "/app/registries"
+  registry_data_v2: "/app/registry"
+
+  # File tools workspace
+  file_workspace: "/workspace"
+
+# Docker Configuration
+docker:
+  socket_path: "unix:///var/run/docker.sock"
+  network_name: "mcp-network"
+  network_driver: "bridge"
+  host_internal: "host.docker.internal"
+
+  # Container management
+  stop_timeout: 10
+
+# HTTP Configuration
+http:
+  # Client timeouts (in seconds)
+  timeouts:
+    default: 10.0
+    health_check: 5.0
+    long_running: 600.0
+
+  # URL patterns
+  url_patterns:
+    docker_host: "http://host.docker.internal:{port}"
+    docker_container: "http://{container_name}:{port}"
+    registry_base: "http://localhost:9000"
+
+# Nmap Configuration
+nmap:
+  timeouts:
+    quick_scan: 300  # 5 minutes
+    full_scan: 600   # 10 minutes
+    vulnerability_scan: 600  # 10 minutes
+
+  # Default targets (can be overridden by env vars)
+  default_network: "192.168.50.0/24"
+  default_target: "192.168.50.1"
+  allowed_networks:
+    - "192.168.50.0/24"
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+
+# LLM Configuration
+llm:
+  max_tokens: 4096
+
+# Auto-install Configuration
+auto_install:
+  mcps:
+    - "agent"
+    - "file_tools"
+    - "nmap_recon"
+    - "history"
+
+# Polling and Retry Configuration
+polling:
+  interval: 2.0  # seconds
+  short_interval: 0.1  # 100ms
+  supervisor_interval: 10.0  # 10 seconds
+
+# API Configuration
+api:
+  protocol: "http"
+  host: "localhost"

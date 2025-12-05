@@ -1,0 +1,51 @@
+# History MCP Server Configuration
+# Conversation history storage and retrieval
+
+service:
+  name: "history"
+  port: 7004
+  host: "0.0.0.0"
+  description: "Conversation history management"
+
+# Storage Configuration
+storage:
+  base_path: "/app/volumes/conversations"
+  max_message_size_kb: 100
+  max_session_size_mb: 1000
+  compression_after_days: 30
+
+# Performance Settings
+performance:
+  wal_enabled: true
+  wal_flush_interval_sec: 5
+  index_build_threshold: 1000
+  max_concurrent_writes: 10
+  read_buffer_size_kb: 64
+
+# Archival Configuration
+archival:
+  archive_after_days: 7
+  archive_path: "/app/volumes/conversations/archive"
+  compression_level: 6
+
+# Search Settings
+search:
+  enable_full_text: true
+  bloom_filter_size_mb: 10
+  max_search_results: 1000
+
+# Monitoring
+monitoring:
+  metrics_enabled: true
+  metrics_port: 9090
+  log_level: "INFO"
+
+# Container Configuration (for deployment)
+deployment:
+  container_name: "mcp-history"
+  network_mode: "bridge"
+  restart_policy: "unless-stopped"
+
+  # Volume mounts for persistent storage
+  volumes:
+    - "./volumes/conversations:/app/volumes/conversations"

@@ -1,0 +1,50 @@
+{
+  "id": "history-1.0.0",
+  "name": "history",
+  "version": "1.0.0",
+  "description": "Conversation history management with Unix-philosophy JSONL storage",
+  "author": "ADCL Team",
+  "tags": ["storage", "history", "conversation", "chat"],
+  "deployment": {
+    "container_name": "mcp-history",
+    "build": {
+      "context": "/app/mcp_servers/history",
+      "dockerfile": "Dockerfile"
+    },
+    "ports": [
+      {
+        "host": "${HISTORY_PORT:-7004}",
+        "container": "7004"
+      }
+    ],
+    "volumes": [
+      {
+        "host": "/app/volumes/conversations",
+        "container": "/app/volumes/conversations"
+      },
+      {
+        "host": "/app/configs/history.conf",
+        "container": "/app/history.conf"
+      },
+      {
+        "host": "/app/logs",
+        "container": "/app/logs"
+      }
+    ],
+    "environment": {
+      "HISTORY_PORT": "${HISTORY_PORT:-7004}",
+      "HISTORY_STORAGE": "/app/volumes/conversations",
+      "PYTHONUNBUFFERED": "1"
+    },
+    "restart": "unless-stopped"
+  },
+  "capabilities": [
+    "create_session",
+    "append_message",
+    "get_messages",
+    "list_sessions",
+    "search_titles",
+    "search_messages",
+    "rebuild_index"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "type": "trigger",
+  "name": "simple-webhook",
+  "version": "1.0.0",
+  "publisher": "adcl-io",
+  "description": "Basic webhook trigger that receives HTTP POST requests and triggers workflows or teams",
+  "checksums": {
+    "sha256": "",
+    "md5": ""
+  },
+  "published_at": "2025-10-25T04:00:00Z"
+}

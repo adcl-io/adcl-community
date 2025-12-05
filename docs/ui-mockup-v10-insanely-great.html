@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADCL Platform - Control Center</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #13131a;
+            --bg-elevated: #1a1a24;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --danger-glow: rgba(239, 68, 68, 0.5);
+
+            --success: #10b981;
+            --success-dark: #059669;
+            --success-glow: rgba(16, 185, 129, 0.5);
+
+            --border: #27272a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .header {
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-bottom-color: var(--success);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .header-status {
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all 0.6s ease;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+        }
+
+        .main-content {
+            padding: 0;
+            position: relative;
+        }
+
+        /* Critical Alert - Dominant */
+        .critical-section {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border: 3px solid var(--danger);
+            margin: 24px;
+            padding: 48px;
+            border-radius: 16px;
+            position: relative;
+            box-shadow: 0 0 60px var(--danger-glow);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .critical-section.transforming {
+            animation: transformThreat 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes transformThreat {
+            0% {
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+                border-color: var(--danger);
+                box-shadow: 0 0 60px var(--danger-glow);
+            }
+            50% {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+                border-color: #ffffff;
+                box-shadow: 0 0 100px rgba(255, 255, 255, 0.6);
+                transform: scale(1.02);
+            }
+            100% {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+                border-color: var(--success);
+                box-shadow: 0 0 60px var(--success-glow);
+                transform: scale(1);
+            }
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            margin-bottom: 32px;
+            transition: all 0.6s ease;
+        }
+
+        .alert-header.success {
+            justify-content: center;
+        }
+
+        .alert-icon {
+            font-size: 72px;
+            line-height: 1;
+            flex-shrink: 0;
+            animation: pulse 2s ease-in-out infinite;
+            transition: all 0.6s ease;
+        }
+
+        .alert-icon.success {
+            font-size: 120px;
+            animation: successPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        @keyframes successPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px var(--success-glow)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 40px var(--success-glow)); }
+        }
+
+        .alert-content {
+            flex: 1;
+            transition: all 0.6s ease;
+        }
+
+        .alert-content.success {
+            text-align: center;
+            flex: none;
+            width: 100%;
+        }
+
+        .alert-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: var(--danger);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            transition: all 0.6s ease;
+        }
+
+        .alert-badge.success {
+            background: var(--success);
+        }
+
+        .alert-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--danger);
+            transition: all 0.6s ease;
+        }
+
+        .alert-title.success {
+            font-size: 48px;
+            color: var(--success);
+            text-align: center;
+        }
+
+        .alert-location {
+            font-size: 16px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.4s ease;
+        }
+
+        .code-block {
+            background: var(--bg-elevated);
+            border: 2px solid var(--danger-dark);
+            border-left: 6px solid var(--danger);
+            padding: 24px;
+            margin: 24px 0;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 18px;
+            line-height: 1.8;
+            border-radius: 8px;
+            color: var(--text-primary);
+            transition: all 0.4s ease;
+        }
+
+        .alert-description {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+            transition: all 0.4s ease;
+        }
+
+        .alert-description.success {
+            text-align: center;
+            font-size: 18px;
+            color: var(--text-primary);
+        }
+
+        /* ACTION SECTION - This is the star */
+        .action-section {
+            margin-bottom: 32px;
+        }
+
+        .action-label {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        /* PRIMARY ACTION - MASSIVE AND ALONE */
+        .primary-action {
+            width: 100%;
+            padding: 48px 72px;
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 32px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 16px 48px var(--danger-glow), 0 0 0 3px rgba(239, 68, 68, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .primary-action::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .primary-action:hover::before {
+            left: 100%;
+        }
+
+        .primary-action:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 64px var(--danger-glow), 0 0 0 3px var(--danger);
+        }
+
+        .primary-action:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+        .primary-action.processing {
+            pointer-events: none;
+            animation: processing 0.8s ease-in-out;
+        }
+
+        @keyframes processing {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.95); filter: brightness(1.5); }
+        }
+
+        .primary-action-icon {
+            font-size: 48px;
+            transition: all 0.3s;
+        }
+
+        .primary-action:hover .primary-action-icon {
+            transform: rotate(-10deg) scale(1.1);
+        }
+
+        /* Secondary Actions - Hidden until after success */
+        .secondary-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .secondary-actions.visible {
+            max-height: 200px;
+            opacity: 1;
+            margin-top: 32px;
+        }
+
+        .secondary-action {
+            padding: 16px 24px;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .secondary-action:hover {
+            background: var(--bg-secondary);
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+        }
+
+        /* Success Stats */
+        .success-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin: 48px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .success-stats.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .success-stat {
+            text-align: center;
+            padding: 32px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            border: 2px solid var(--success);
+            box-shadow: 0 0 20px var(--success-glow);
+        }
+
+        .success-stat-value {
+            font-size: 64px;
+            font-weight: 800;
+            color: var(--success);
+            margin-bottom: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .success-stat-label {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Workflow Section - Disappears on success */
+        .workflow-section {
+            margin: 24px;
+            padding: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            opacity: 0.7;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .workflow-section.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            max-height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .workflow-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .workflow-step {
+            background: var(--bg-elevated);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .workflow-step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .workflow-step-icon {
+            font-size: 24px;
+        }
+
+        .workflow-step-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .workflow-step-status {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .workflow-step-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .workflow-step-badge.success {
+            background: var(--success);
+        }
+
+        /* Next Action Button */
+        .next-action {
+            width: 100%;
+            padding: 24px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 32px;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .next-action.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .next-action:hover {
+            background: var(--success-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Hide elements during transformation */
+        .fade-out {
+            animation: fadeOut 0.4s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        /* Electric circuit animation overlay */
+        .circuit-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+        }
+
+        .circuit-overlay.active {
+            animation: circuitPulse 1.2s ease;
+        }
+
+        @keyframes circuitPulse {
+            0% { opacity: 0; }
+            20% { opacity: 1; background: radial-gradient(circle at center, rgba(239, 68, 68, 0.3) 0%, transparent 70%); }
+            50% { opacity: 1; background: radial-gradient(circle at center, rgba(255, 255, 255, 0.4) 0%, transparent 70%); }
+            80% { opacity: 1; background: radial-gradient(circle at center, rgba(16, 185, 129, 0.3) 0%, transparent 70%); }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="circuit-overlay" id="circuitOverlay"></div>
+
+    <div class="layout">
+        <div class="header" id="header">
+            <div class="header-left">
+                <div class="header-title">ADCL Control Center</div>
+                <div class="header-status" id="headerStatus">Security Scan Pipeline • 3 Critical Issues</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Critical Alert State -->
+            <div class="critical-section" id="criticalSection">
+                <div class="alert-header" id="alertHeader">
+                    <div class="alert-icon" id="alertIcon">⚡</div>
+                    <div class="alert-content" id="alertContent">
+                        <div class="alert-badge" id="alertBadge">CRITICAL</div>
+                        <div class="alert-location" id="alertLocation">📄 src/auth/login.js:47</div>
+                    </div>
+                </div>
+
+                <h1 class="alert-title" id="alertTitle">SQL Injection Vulnerability</h1>
+
+                <div class="code-block" id="codeBlock">query = "SELECT * FROM users WHERE id=" + userId</div>
+
+                <div class="alert-description" id="alertDescription">
+                    Unescaped user input directly concatenated into SQL query. Attacker can inject arbitrary SQL commands to read, modify, or delete database contents. This vulnerability could lead to complete database compromise.
+                </div>
+
+                <div class="action-section">
+                    <div class="action-label" id="actionLabel">TAKE CONTROL</div>
+                    <button class="primary-action" id="primaryAction" onclick="fixVulnerability()">
+                        <span class="primary-action-icon">⚡</span>
+                        <span>FIX VULNERABILITY NOW</span>
+                    </button>
+
+                    <!-- Success Stats - Hidden initially -->
+                    <div class="success-stats" id="successStats">
+                        <div class="success-stat">
+                            <div class="success-stat-value" id="stat1">0</div>
+                            <div class="success-stat-label">Files Secured</div>
+                        </div>
+                        <div class="success-stat">
+                            <div class="success-stat-value" id="stat2">0</div>
+                            <div class="success-stat-label">Similar Issues Fixed</div>
+                        </div>
+                        <div class="success-stat">
+                            <div class="success-stat-value" id="stat3">0%</div>
+                            <div class="success-stat-label">Protection Level</div>
+                        </div>
+                    </div>
+
+                    <!-- Next Action Button -->
+                    <button class="next-action" id="nextAction" onclick="resetDemo()">
+                        Continue to Next Issue →
+                    </button>
+
+                    <!-- Secondary Actions - Hidden initially, shown after success -->
+                    <div class="secondary-actions" id="secondaryActions">
+                        <button class="secondary-action">
+                            <span>📊</span> View Detailed Report
+                        </button>
+                        <button class="secondary-action">
+                            <span>🔄</span> Run Full System Scan
+                        </button>
+                        <button class="secondary-action">
+                            <span>📢</span> Notify Team
+                        </button>
+                        <button class="secondary-action">
+                            <span>📥</span> Export Security Audit
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Section - Disappears on success -->
+            <div class="workflow-section" id="workflowSection">
+                <div class="workflow-title">Automated Security Pipeline</div>
+                <div class="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="workflow-step-header">
+                            <div class="workflow-step-icon">📁</div>
+                            <div class="workflow-step-title">File Scanner</div>
+                        </div>
+                        <div class="workflow-step-status">Processing: login.js</div>
+                        <div class="workflow-step-status">Progress: 247/1,247</div>
+                        <div class="workflow-step-badge">ACTIVE</div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-step-header">
+                            <div class="workflow-step-icon">🤖</div>
+                            <div class="workflow-step-title">Security Agent</div>
+                        </div>
+                        <div class="workflow-step-status">Issues: 3 CRITICAL</div>
+                        <div class="workflow-step-status">AI Status: 82%</div>
+                        <div class="workflow-step-badge">ACTIVE</div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-step-header">
+                            <div class="workflow-step-icon">📊</div>
+                            <div class="workflow-step-title">Report</div>
+                        </div>
+                        <div class="workflow-step-status">Status: Ready</div>
+                        <div class="workflow-step-status">Output: report.pdf</div>
+                        <div class="workflow-step-badge success">READY</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function animateCounter(element, start, end, duration, suffix = '') {
+            const startTime = performance.now();
+            const isPercentage = suffix === '%';
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Easing function for smooth deceleration
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (end - start) * easeOut);
+
+                element.textContent = current + suffix;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function fixVulnerability() {
+            // 1. Trigger circuit overlay
+            const circuitOverlay = document.getElementById('circuitOverlay');
+            circuitOverlay.classList.add('active');
+            setTimeout(() => circuitOverlay.classList.remove('active'), 1200);
+
+            // 2. Process button animation
+            const primaryAction = document.getElementById('primaryAction');
+            primaryAction.classList.add('processing');
+
+            // 3. Start transformation after brief delay
+            setTimeout(() => {
+                const criticalSection = document.getElementById('criticalSection');
+                const workflowSection = document.getElementById('workflowSection');
+                const header = document.getElementById('header');
+                const headerStatus = document.getElementById('headerStatus');
+                const codeBlock = document.getElementById('codeBlock');
+                const alertLocation = document.getElementById('alertLocation');
+                const actionLabel = document.getElementById('actionLabel');
+
+                // Fade out elements
+                codeBlock.classList.add('fade-out');
+                alertLocation.classList.add('fade-out');
+                actionLabel.classList.add('fade-out');
+                primaryAction.classList.add('fade-out');
+
+                // Transform main section
+                criticalSection.classList.add('transforming');
+
+                // Update header
+                header.classList.add('success');
+                headerStatus.textContent = 'System Secure • All Threats Neutralized';
+
+                // Hide workflow
+                workflowSection.classList.add('hidden');
+
+                // Wait for transformation, then update content
+                setTimeout(() => {
+                    // Update alert elements
+                    document.getElementById('alertIcon').textContent = '✅';
+                    document.getElementById('alertIcon').classList.add('success');
+                    document.getElementById('alertBadge').textContent = 'SECURE';
+                    document.getElementById('alertBadge').classList.add('success');
+                    document.getElementById('alertTitle').textContent = "YOU'RE SAFE";
+                    document.getElementById('alertTitle').classList.add('success');
+                    document.getElementById('alertDescription').textContent = 'SQL injection patched, parameterized queries implemented, all similar patterns secured across codebase.';
+                    document.getElementById('alertDescription').classList.add('success');
+                    document.getElementById('alertHeader').classList.add('success');
+                    document.getElementById('alertContent').classList.add('success');
+
+                    // Remove transformed elements
+                    codeBlock.style.display = 'none';
+                    alertLocation.style.display = 'none';
+                    actionLabel.style.display = 'none';
+                    primaryAction.style.display = 'none';
+
+                    // Show and animate stats
+                    const successStats = document.getElementById('successStats');
+                    successStats.classList.add('visible');
+
+                    // Animate counters with slot machine effect
+                    setTimeout(() => {
+                        animateCounter(document.getElementById('stat1'), 0, 247, 1500);
+                        animateCounter(document.getElementById('stat2'), 0, 12, 1200);
+                        animateCounter(document.getElementById('stat3'), 0, 100, 1800, '%');
+                    }, 200);
+
+                    // Show next action button
+                    setTimeout(() => {
+                        document.getElementById('nextAction').classList.add('visible');
+                    }, 1000);
+
+                    // Show secondary actions last
+                    setTimeout(() => {
+                        document.getElementById('secondaryActions').classList.add('visible');
+                    }, 1500);
+                }, 600);
+            }, 400);
+        }
+
+        function resetDemo() {
+            // Reset all elements to initial state
+            location.reload();
+        }
+    </script>
+</body>
+</html>

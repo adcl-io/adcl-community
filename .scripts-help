@@ -1,0 +1,27 @@
+╔══════════════════════════════════════════════════════╗
+║     MCP Agent Platform - Management Scripts         ║
+╚══════════════════════════════════════════════════════╝
+
+📚 MAIN SCRIPTS:
+  ./start.sh              Start all services (detached)
+  ./stop.sh               Stop all services
+  ./status.sh             Check service status + health
+  ./logs.sh [service]     View logs (api/agent/frontend/all)
+
+🔄 SERVICE RESTARTS:
+  ./restart-api.sh        Restart API server
+  ./restart-agent.sh      Restart agent MCP
+  ./restart-frontend.sh   Restart frontend
+
+📖 DOCUMENTATION:
+  QUICK_START.md          Quick reference guide
+  SCRIPTS.md              Complete script documentation
+  README.md               Full platform documentation
+
+💡 EXAMPLES:
+  ./start.sh && ./status.sh          # Start and check status
+  ./logs.sh api                      # View API logs
+  ./restart-api.sh                   # Restart API server
+  ./stop.sh                          # Stop everything
+
+Type './status.sh' to check if services are running!

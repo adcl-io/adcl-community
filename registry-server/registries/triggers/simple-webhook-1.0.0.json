@@ -1,0 +1,97 @@
+{
+  "name": "simple-webhook",
+  "version": "1.0.0",
+  "type": "trigger",
+  "publisher": "adcl-io",
+  "description": "Basic webhook trigger that receives HTTP POST requests and triggers workflows or teams",
+  "metadata": {
+    "author": "ADCL Platform Team",
+    "license": "Proprietary",
+    "repository": "https://github.com/adcl-io/demo-sandbox",
+    "documentation": "https://docs.adcl.io/triggers/webhook"
+  },
+  "deployment": {
+    "image": "trigger-simple-webhook:1.0.0",
+    "build": {
+      "context": "./triggers/webhook",
+      "dockerfile": "Dockerfile.webhook"
+    },
+    "container_name": "trigger-simple-webhook",
+    "restart": "unless-stopped",
+    "ports": [
+      {
+        "host": "8100",
+        "container": "8100"
+      }
+    ],
+    "environment": {
+      "TASK_TEMPLATE": "${TASK_TEMPLATE:-Process webhook event: {_raw}}"
+    },
+    "volumes": []
+  },
+  "trigger": {
+    "type": "webhook",
+    "description": "HTTP webhook endpoint (for teams, uses configurable task template)",
+    "endpoints": [
+      {
+        "path": "/webhook",
+        "method": "POST",
+        "description": "Receive webhook and trigger workflow/team"
+      },
+      {
+        "path": "/health",
+        "method": "GET",
+        "description": "Health check endpoint"
+      }
+    ]
+  },
+  "action": {
+    "description": "Triggers user-configured workflow or team",
+    "params": {
+      "note": "Forwards entire webhook payload as params"
+    }
+  },
+  "examples": [
+    {
+      "name": "Install with workflow",
+      "request": {
+        "endpoint": "POST /registries/install/trigger/simple-webhook-1.0.0",
+        "body": {
+          "workflow_id": "my-workflow"
+        }
+      }
+    },
+    {
+      "name": "Install with team",
+      "request": {
+        "endpoint": "POST /registries/install/trigger/simple-webhook-1.0.0",
+        "body": {
+          "team_id": "security-team"
+        }
+      }
+    },
+    {
+      "name": "Send webhook",
+      "request": {
+        "endpoint": "POST http://localhost:8100/webhook",
+        "body": {
+          "data": "example payload"
+        }
+      }
+    },
+    {
+      "name": "Custom task template for GitHub PRs",
+      "description": "Configure task template to extract PR information from webhook payload",
+      "environment": {
+        "TASK_TEMPLATE": "Review pull request #{pull_request.number}: {pull_request.title}"
+      }
+    },
+    {
+      "name": "Custom task template for Linear issues",
+      "description": "Configure task template for Linear webhook events",
+      "environment": {
+        "TASK_TEMPLATE": "Handle Linear issue {data.identifier}: {data.title}"
+      }
+    }
+  ]
+}

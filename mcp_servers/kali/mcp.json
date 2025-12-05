@@ -1,0 +1,72 @@
+{
+  "name": "kali",
+  "version": "1.0.0",
+  "description": "Kali Linux penetration testing tools (defensive security)",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": ".",
+      "dockerfile": "Dockerfile"
+    },
+    "image": "mcp-kali:1.0.0",
+    "container_name": "mcp-kali",
+    "network_mode": "host",
+    "volumes": [
+      {
+        "host": "./logs/kali",
+        "container": "/app/logs"
+      }
+    ],
+    "environment": {
+      "PYTHONUNBUFFERED": "1",
+      "KALI_PORT": "${KALI_PORT:-7005}",
+      "LOG_DIR": "/app/logs"
+    },
+    "cap_add": ["NET_RAW", "NET_ADMIN"],
+    "restart": "unless-stopped"
+  },
+  "requirements": {
+    "network_mode": "host",
+    "capabilities": ["NET_RAW", "NET_ADMIN"],
+    "min_memory": "512M",
+    "min_cpu": "0.5"
+  },
+  "tools": [
+    {
+      "name": "nikto_scan",
+      "description": "Scan web server for vulnerabilities using Nikto"
+    },
+    {
+      "name": "dirb_scan",
+      "description": "Brute force directories and files on web server"
+    },
+    {
+      "name": "sqlmap_scan",
+      "description": "Test for SQL injection vulnerabilities"
+    },
+    {
+      "name": "metasploit_search",
+      "description": "Search Metasploit for exploits and modules"
+    },
+    {
+      "name": "hydra_bruteforce",
+      "description": "Brute force authentication (SSH, FTP, HTTP, etc.)"
+    },
+    {
+      "name": "wpscan",
+      "description": "Scan WordPress sites for vulnerabilities"
+    },
+    {
+      "name": "dns_enum",
+      "description": "Enumerate DNS records and subdomains"
+    },
+    {
+      "name": "subdomain_enum",
+      "description": "Discover subdomains using sublist3r"
+    }
+  ],
+  "tags": ["security", "pentesting", "kali", "vulnerability-scanning"],
+  "author": "ADCL Platform Team",
+  "license": "MIT",
+  "security_note": "DEFENSIVE USE ONLY. For authorized penetration testing and security assessments on systems you own or have explicit permission to test."
+}

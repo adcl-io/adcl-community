@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy trigger code
+COPY schedule_trigger.py .
+
+# Health check to ensure process is running
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
+    CMD pgrep -f "python schedule_trigger.py" || exit 1
+
+# Run trigger (no exposed ports - runs as background process)
+CMD ["python", "schedule_trigger.py"]

@@ -1,0 +1,61 @@
+models:
+- id: claude-sonnet-4-5
+  name: Claude Sonnet 4.5
+  provider: anthropic
+  model_id: claude-sonnet-4-5-20250929
+  temperature: 0.7
+  max_tokens: 8192
+  description: Most intelligent model - best for complex tasks
+  is_default: false
+  api_key_env: ANTHROPIC_API_KEY
+- id: claude-sonnet-4
+  name: Claude Sonnet 4
+  provider: anthropic
+  model_id: claude-sonnet-4-20250514
+  temperature: 0.7
+  max_tokens: 8192
+  description: Balanced intelligence and speed
+  is_default: false
+  api_key_env: ANTHROPIC_API_KEY
+- id: claude-opus-4
+  name: Claude Opus 4
+  provider: anthropic
+  model_id: claude-opus-4-20250514
+  temperature: 0.7
+  max_tokens: 8192
+  description: Highest capability model for the most complex tasks
+  is_default: false
+  api_key_env: ANTHROPIC_API_KEY
+- id: gpt-4-turbo
+  name: GPT-4 Turbo
+  provider: openai
+  model_id: gpt-4-turbo-preview
+  temperature: 0.7
+  max_tokens: 4096
+  description: Latest GPT-4 with improved capabilities
+  is_default: true
+  api_key_env: OPENAI_API_KEY
+- id: gpt-4
+  name: GPT-4
+  provider: openai
+  model_id: gpt-4
+  temperature: 0.7
+  max_tokens: 8192
+  description: Most capable GPT-4 model
+  is_default: false
+  api_key_env: OPENAI_API_KEY
+- id: gpt-3-5-turbo
+  name: GPT-3.5 Turbo
+  provider: openai
+  model_id: gpt-3.5-turbo
+  temperature: 0.7
+  max_tokens: 4096
+  description: Fast and cost-effective
+  is_default: false
+  api_key_env: OPENAI_API_KEY
+anthropic:
+  timeout: 60
+  max_retries: 3
+openai:
+  timeout: 60
+  max_retries: 3

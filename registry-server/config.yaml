@@ -1,0 +1,26 @@
+# MCP Registry Server Configuration
+# Package registry for MCP servers and agent teams (yum-style)
+
+service:
+  name: "registry"
+  port: 9000
+  host: "0.0.0.0"
+  description: "Package registry for MCP servers and agent teams"
+
+# Storage Configuration
+storage:
+  registries_path: "/app/registries"
+
+# API Configuration
+api:
+  protocol: "http"
+  host: "localhost"
+
+# Container Configuration (for deployment)
+deployment:
+  container_name: "mcp-registry"
+  network_mode: "bridge"
+  restart_policy: "unless-stopped"
+
+  volumes:
+    - "./registry-server/registries:/app/registries"

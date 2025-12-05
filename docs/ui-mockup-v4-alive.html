@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADCL Platform - Alive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #FF6B35;
+            --bg-dark: #0B0F1A;
+            --bg-canvas: #0F1419;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8B95A8;
+            --success: #10B981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-btn {
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* Canvas with animated workflow */
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 260px;
+            background: var(--bg-canvas);
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            overflow: hidden;
+        }
+
+        .active-workflow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            gap: 80px;
+        }
+
+        .workflow-node {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: nodeFloat 3s ease-in-out infinite;
+        }
+
+        .workflow-node:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .workflow-node:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        .node-box {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 107, 53, 0.5);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .node-box::before {
+            content: '';
+            position: absolute;
+            inset: -100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 107, 53, 0.3) 50%, transparent 70%);
+            animation: shimmer 2s infinite;
+        }
+
+        .node-icon {
+            font-size: 40px;
+            filter: drop-shadow(0 2px 8px rgba(255, 107, 53, 0.6));
+        }
+
+        .node-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .node-status {
+            position: absolute;
+            bottom: -30px;
+            font-size: 11px;
+            color: var(--success);
+            animation: statusPulse 1.5s ease-in-out infinite;
+        }
+
+        /* Animated data flowing between nodes */
+        .data-flow {
+            position: absolute;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 10px;
+        }
+
+        .data-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            left: 0;
+            top: -3px;
+            animation: flowParticle 2s ease-in-out infinite;
+            box-shadow: 0 0 12px var(--accent);
+        }
+
+        /* Tool Dock with varied sizes */
+        .tool-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 260px;
+            background: linear-gradient(to top, rgba(11, 15, 26, 0.98), rgba(11, 15, 26, 0.9));
+            backdrop-filter: blur(40px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            align-items: flex-end;
+        }
+
+        /* File tools - looks like a folder */
+        .tool-file {
+            flex-shrink: 0;
+            width: 200px;
+            height: 220px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border: 2px solid rgba(59, 130, 246, 0.4);
+            border-radius: 24px;
+            padding: 20px;
+            cursor: grab;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: visible;
+        }
+
+        .tool-file:hover {
+            transform: translateY(-16px) scale(1.05);
+            box-shadow: 0 24px 48px rgba(59, 130, 246, 0.4);
+        }
+
+        .tool-file .folder-icon {
+            font-size: 72px;
+            margin-bottom: 12px;
+            transition: transform 0.3s;
+        }
+
+        .tool-file:hover .folder-icon {
+            transform: rotateY(15deg);
+        }
+
+        .tool-activity {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 10px;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            border-radius: 8px;
+            font-size: 11px;
+            color: var(--success);
+            font-weight: 600;
+            animation: activityBlink 2s ease-in-out infinite;
+        }
+
+        /* Network tool - radar pulse */
+        .tool-network {
+            flex-shrink: 0;
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            border-radius: 24px;
+            padding: 20px;
+            cursor: grab;
+            position: relative;
+            transition: all 0.4s;
+        }
+
+        .tool-network:hover {
+            transform: translateY(-12px) scale(1.05);
+            box-shadow: 0 24px 48px rgba(139, 92, 246, 0.4);
+        }
+
+        .tool-network::before {
+            content: '';
+            position: absolute;
+            inset: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent 70%);
+            animation: radarPulse 2s ease-out infinite;
+        }
+
+        /* Security tool - shield with scan lines */
+        .tool-security {
+            flex-shrink: 0;
+            width: 160px;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            border-radius: 24px;
+            padding: 20px;
+            cursor: grab;
+            position: relative;
+            transition: all 0.4s;
+        }
+
+        .tool-security:hover {
+            transform: translateY(-12px) scale(1.05);
+            box-shadow: 0 24px 48px rgba(239, 68, 68, 0.4);
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.8), transparent);
+            animation: scanMove 2s ease-in-out infinite;
+        }
+
+        /* Database - data streams */
+        .tool-database {
+            flex-shrink: 0;
+            width: 170px;
+            height: 190px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            border-radius: 24px;
+            padding: 20px;
+            cursor: grab;
+            position: relative;
+            transition: all 0.4s;
+            overflow: hidden;
+        }
+
+        .tool-database:hover {
+            transform: translateY(-12px) scale(1.05);
+            box-shadow: 0 24px 48px rgba(16, 185, 129, 0.4);
+        }
+
+        .data-stream {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.6), transparent);
+            animation: streamFlow 1.5s ease-in-out infinite;
+        }
+
+        .data-stream:nth-child(1) { top: 30%; animation-delay: 0s; }
+        .data-stream:nth-child(2) { top: 50%; animation-delay: 0.3s; }
+        .data-stream:nth-child(3) { top: 70%; animation-delay: 0.6s; }
+
+        /* Git tool - branching animation */
+        .tool-git {
+            flex-shrink: 0;
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+            border: 2px solid rgba(245, 158, 11, 0.4);
+            border-radius: 24px;
+            padding: 20px;
+            cursor: grab;
+            position: relative;
+            transition: all 0.4s;
+        }
+
+        .tool-git:hover {
+            transform: translateY(-12px) scale(1.05);
+            box-shadow: 0 24px 48px rgba(245, 158, 11, 0.4);
+        }
+
+        .tool-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .tool-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Discovery Panel with real stories */
+        .discovery-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 400px;
+            max-height: calc(100vh - 360px);
+            background: rgba(15, 20, 25, 0.95);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent), #FF8F6B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .panel-content {
+            padding: 20px;
+            max-height: calc(100vh - 480px);
+            overflow-y: auto;
+        }
+
+        .story-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .story-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent);
+            transform: translateX(-4px);
+        }
+
+        .story-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .user-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .story-result {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid var(--success);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .result-text {
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+
+        .story-tools {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .story-tool-tag {
+            font-size: 11px;
+            padding: 4px 10px;
+            background: rgba(255, 107, 53, 0.15);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 8px;
+            color: var(--accent);
+        }
+
+        .story-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .story-action {
+            color: var(--accent);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .story-action:hover {
+            color: #FF8F6B;
+        }
+
+        /* Animations */
+        @keyframes nodeFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes flowParticle {
+            0% { left: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes activityBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes radarPulse {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        @keyframes scanMove {
+            0% { top: 20%; }
+            100% { top: 80%; }
+        }
+
+        @keyframes streamFlow {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <button class="header-btn">⌘K Command</button>
+        <button class="header-btn">💾 Save</button>
+    </div>
+
+    <!-- Canvas with ACTIVE workflow -->
+    <div class="canvas-container">
+        <div class="active-workflow">
+            <!-- Node 1: File Tools -->
+            <div class="workflow-node">
+                <div class="node-box">
+                    <div class="node-icon">📁</div>
+                    <div class="node-name">file_tools</div>
+                    <div class="data-flow">
+                        <div class="data-particle"></div>
+                    </div>
+                </div>
+                <div class="node-status">Processing: 247 files/sec</div>
+            </div>
+
+            <!-- Node 2: Agent -->
+            <div class="workflow-node">
+                <div class="node-box">
+                    <div class="node-icon">🤖</div>
+                    <div class="node-name">agent</div>
+                    <div class="data-flow">
+                        <div class="data-particle"></div>
+                    </div>
+                </div>
+                <div class="node-status">Analyzing...</div>
+            </div>
+
+            <!-- Node 3: Security -->
+            <div class="workflow-node">
+                <div class="node-box">
+                    <div class="node-icon">🛡️</div>
+                    <div class="node-name">security</div>
+                </div>
+                <div class="node-status">Found 12 issues</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tool Dock with varied sizes and personalities -->
+    <div class="tool-dock">
+        <!-- File Tools - LARGEST (most used) -->
+        <div class="tool-file" draggable="true">
+            <div class="tool-activity">247 files/s</div>
+            <div class="folder-icon">📁</div>
+            <div class="tool-name">file_tools</div>
+            <div class="tool-description">Read, write, manage</div>
+        </div>
+
+        <!-- Network - Medium -->
+        <div class="tool-network" draggable="true">
+            <div class="tool-activity">Scanning...</div>
+            <div style="font-size: 56px; margin-top: 20px;">🔍</div>
+            <div class="tool-name">nmap_recon</div>
+            <div class="tool-description">Network scan</div>
+        </div>
+
+        <!-- Security - Tall -->
+        <div class="tool-security" draggable="true">
+            <div class="scan-line"></div>
+            <div class="tool-activity">Active</div>
+            <div style="font-size: 56px; margin-top: 30px;">🛡️</div>
+            <div class="tool-name">kali_tools</div>
+            <div class="tool-description">Pen testing</div>
+        </div>
+
+        <!-- Database - Medium -->
+        <div class="tool-database" draggable="true">
+            <div class="data-stream"></div>
+            <div class="data-stream"></div>
+            <div class="data-stream"></div>
+            <div class="tool-activity">3.2K q/s</div>
+            <div style="font-size: 56px; margin-top: 20px;">💾</div>
+            <div class="tool-name">database</div>
+            <div class="tool-description">SQL queries</div>
+        </div>
+
+        <!-- Git - Medium -->
+        <div class="tool-git" draggable="true">
+            <div class="tool-activity">12 repos</div>
+            <div style="font-size: 56px; margin-top: 20px;">🐙</div>
+            <div class="tool-name">git_tools</div>
+            <div class="tool-description">Version control</div>
+        </div>
+    </div>
+
+    <!-- Discovery Panel with REAL stories -->
+    <div class="discovery-panel">
+        <div class="panel-header">
+            <div class="panel-title">Success Stories</div>
+        </div>
+        <div class="panel-content">
+            <!-- Story 1 -->
+            <div class="story-card">
+                <div class="story-header">
+                    <div class="user-avatar">SJ</div>
+                    <div class="user-info">
+                        <div class="user-name">Sarah Johnson</div>
+                        <div class="user-title">Security Lead @ Stripe</div>
+                    </div>
+                </div>
+                <div class="story-result">
+                    <div class="result-text">Protected payment API from zero-day exploit. Detected in 4 minutes, patched before any customer impact.</div>
+                </div>
+                <div class="story-tools">
+                    <span class="story-tool-tag">nmap_recon</span>
+                    <span class="story-tool-tag">kali_tools</span>
+                </div>
+                <div class="story-meta">
+                    <span>2 days ago</span>
+                    <span class="story-action">Try this workflow →</span>
+                </div>
+            </div>
+
+            <!-- Story 2 -->
+            <div class="story-card">
+                <div class="story-header">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #10B981, #3B82F6);">MK</div>
+                    <div class="user-info">
+                        <div class="user-name">Marcus Kim</div>
+                        <div class="user-title">DevOps @ Airbnb</div>
+                    </div>
+                </div>
+                <div class="story-result">
+                    <div class="result-text">Saved $47K/month in AWS costs. Automated file cleanup across 200+ S3 buckets in production.</div>
+                </div>
+                <div class="story-tools">
+                    <span class="story-tool-tag">file_tools</span>
+                    <span class="story-tool-tag">database</span>
+                </div>
+                <div class="story-meta">
+                    <span>1 week ago</span>
+                    <span class="story-action">Try this workflow →</span>
+                </div>
+            </div>
+
+            <!-- Story 3 -->
+            <div class="story-card">
+                <div class="story-header">
+                    <div class="user-avatar" style="background: linear-gradient(135deg, #F59E0B, #EF4444);">AP</div>
+                    <div class="user-info">
+                        <div class="user-name">Alex Patel</div>
+                        <div class="user-title">CTO @ TechCorp</div>
+                    </div>
+                </div>
+                <div class="story-result">
+                    <div class="result-text">Migrated 2.3M files between cloud providers overnight. Zero downtime, zero data loss.</div>
+                </div>
+                <div class="story-tools">
+                    <span class="story-tool-tag">file_tools</span>
+                    <span class="story-tool-tag">git_tools</span>
+                </div>
+                <div class="story-meta">
+                    <span>3 weeks ago</span>
+                    <span class="story-action">Try this workflow →</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Drag and drop with visual feedback
+        document.querySelectorAll('[draggable="true"]').forEach(tool => {
+            tool.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                tool.style.opacity = '0.5';
+                tool.style.transform = 'scale(0.9)';
+            });
+
+            tool.addEventListener('dragend', (e) => {
+                tool.style.opacity = '1';
+                tool.style.transform = '';
+            });
+        });
+
+        // Canvas drop with animation
+        const canvas = document.querySelector('.canvas-container');
+        canvas.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        canvas.addEventListener('drop', (e) => {
+            e.preventDefault();
+            // In real app, add node to workflow
+            const flash = document.createElement('div');
+            flash.style.cssText = `
+                position: fixed;
+                left: ${e.clientX - 50}px;
+                top: ${e.clientY - 50}px;
+                width: 100px;
+                height: 100px;
+                background: radial-gradient(circle, rgba(255, 107, 53, 0.5), transparent);
+                border-radius: 50%;
+                pointer-events: none;
+                animation: flashExpand 0.5s ease-out;
+            `;
+            document.body.appendChild(flash);
+            setTimeout(() => flash.remove(), 500);
+        });
+
+        // Command palette
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                alert('Command Palette (⌘K)');
+            }
+        });
+
+        // Add expand animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes flashExpand {
+                from { transform: scale(0); opacity: 1; }
+                to { transform: scale(2); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

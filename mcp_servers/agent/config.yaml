@@ -1,0 +1,24 @@
+# Agent MCP Server Configuration
+# Provides AI agent capabilities (thinking, coding, review)
+
+service:
+  name: "agent"
+  port: 7000
+  host: "0.0.0.0"
+  description: "AI Agent MCP Server - Provides thinking, coding, and review capabilities"
+
+# API Configuration
+api:
+  anthropic_api_key_env: "ANTHROPIC_API_KEY"
+
+# LLM Settings
+llm:
+  default_model: "claude-sonnet-4-5-20250929"
+  max_tokens: 4096
+  temperature: 0.7
+
+# Container Configuration (for deployment)
+deployment:
+  container_name: "mcp-agent"
+  network_mode: "bridge"
+  restart_policy: "unless-stopped"

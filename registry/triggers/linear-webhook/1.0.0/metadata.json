@@ -1,0 +1,12 @@
+{
+  "type": "trigger",
+  "name": "linear-webhook",
+  "version": "1.0.0",
+  "publisher": "adcl-io",
+  "description": "Linear webhook trigger with signature verification and deduplication",
+  "checksums": {
+    "sha256": "",
+    "md5": ""
+  },
+  "published_at": "2025-10-25T05:00:00Z"
+}

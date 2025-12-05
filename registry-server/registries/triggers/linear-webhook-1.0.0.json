@@ -1,0 +1,117 @@
+{
+  "name": "linear-webhook",
+  "version": "1.0.0",
+  "type": "trigger",
+  "publisher": "adcl-io",
+  "description": "Linear webhook trigger with signature verification and deduplication",
+  "metadata": {
+    "author": "ADCL Platform Team",
+    "license": "Proprietary",
+    "repository": "https://github.com/adcl-io/demo-sandbox",
+    "documentation": "https://docs.adcl.io/triggers/linear-webhook"
+  },
+  "deployment": {
+    "image": "trigger-linear-webhook:1.0.0",
+    "build": {
+      "context": "./triggers/webhook",
+      "dockerfile": "Dockerfile.linear"
+    },
+    "container_name": "trigger-linear-webhook",
+    "restart": "unless-stopped",
+    "ports": [
+      {
+        "host": "8103",
+        "container": "8103"
+      }
+    ],
+    "environment": {
+      "LINEAR_WEBHOOK_SECRET": "${LINEAR_WEBHOOK_SECRET}",
+      "FILTER_EVENT_TYPES": "${FILTER_EVENT_TYPES:-AgentSessionEvent,agentSession}",
+      "LINEAR_CLIENT_ID": "${LINEAR_CLIENT_ID}",
+      "LINEAR_CLIENT_SECRET": "${LINEAR_CLIENT_SECRET}",
+      "LINEAR_REDIRECT_URI": "${LINEAR_REDIRECT_URI:-}"
+    },
+    "volumes": []
+  },
+  "trigger": {
+    "type": "webhook",
+    "description": "Linear webhook with signature verification and deduplication",
+    "auth": {
+      "type": "hmac",
+      "header": "Linear-Signature",
+      "algorithm": "sha256"
+    },
+    "deduplication": {
+      "enabled": true,
+      "header": "Linear-Delivery",
+      "cache_size": 1000
+    },
+    "filters": {
+      "event_types": ["agentSession", "issue"]
+    },
+    "endpoints": [
+      {
+        "path": "/webhook",
+        "method": "POST",
+        "description": "Receive Linear webhook and trigger workflow/team"
+      },
+      {
+        "path": "/health",
+        "method": "GET",
+        "description": "Health check endpoint"
+      }
+    ]
+  },
+  "action": {
+    "description": "Triggers user-configured workflow or team on Linear events with OAuth credentials",
+    "params": {
+      "session_id": "${event.data.id}",
+      "issue_id": "${event.data.issueId}",
+      "state": "${event.data.state}",
+      "action": "${event.action}",
+      "linear_oauth": {
+        "client_id": "${LINEAR_CLIENT_ID}",
+        "client_secret": "${LINEAR_CLIENT_SECRET}",
+        "redirect_uri": "${LINEAR_REDIRECT_URI}",
+        "note": "OAuth credentials for Linear API authentication"
+      }
+    }
+  },
+  "examples": [
+    {
+      "name": "Install for agent session handler with OAuth",
+      "request": {
+        "endpoint": "POST /registries/install/trigger/linear-webhook-1.0.0",
+        "body": {
+          "workflow_id": "agent-handler"
+        }
+      },
+      "note": "Requires LINEAR_CLIENT_ID and LINEAR_CLIENT_SECRET in environment"
+    },
+    {
+      "name": "Linear webhook configuration",
+      "steps": [
+        "1. Create Linear OAuth Application:",
+        "   - Go to Linear → Settings → API → Applications → Create",
+        "   - Set redirect URI",
+        "   - Copy client_id and client_secret to trigger environment",
+        "",
+        "2. Create Linear Webhook:",
+        "   - Go to Linear → Settings → API → Webhooks → Create webhook",
+        "   - URL: http://your-server:8103/webhook",
+        "   - Secret: (set LINEAR_WEBHOOK_SECRET)",
+        "   - Resources: Agent sessions",
+        "",
+        "3. Configure Trigger:",
+        "   - LINEAR_WEBHOOK_SECRET: webhook secret from step 2",
+        "   - LINEAR_CLIENT_ID: client_id from step 1",
+        "   - LINEAR_CLIENT_SECRET: client_secret from step 1",
+        "   - LINEAR_REDIRECT_URI: redirect URI from step 1"
+      ]
+    },
+    {
+      "name": "Agent workflow receives OAuth credentials",
+      "description": "Workflow params automatically include linear_oauth object with client credentials for API authentication"
+    }
+  ]
+}

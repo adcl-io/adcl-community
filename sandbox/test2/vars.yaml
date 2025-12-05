@@ -1,0 +1,44 @@
+# Test configuration variables
+
+# Network scanning configuration
+network:
+  target: "192.168.50.0/24"
+  scan_type: "comprehensive"  # or "quick"
+
+# Campaign configuration
+campaign:
+  name: "E2E Test Campaign"
+  mode: "sequential"  # or "parallel"
+  timeout_minutes: 30
+
+# Agent configuration
+agents:
+  recon:
+    persona: "methodical_recon"
+    count: 1
+    llm_model: "claude-sonnet-4"
+    temperature: 0.3
+    max_tasks: 10
+    timeout_minutes: 30
+
+  exploit:
+    persona: "web_exploit_specialist"
+    count: 2
+    llm_model: "claude-sonnet-4"
+    temperature: 0.7
+    max_tasks: 20
+    timeout_minutes: 45
+
+# MCP server configuration
+mcp:
+  nmap:
+    host: "localhost"
+    port: 6000
+  web_tools:
+    host: "localhost"
+    port: 6100
+
+# Test behavior
+test:
+  wait_for_agents_timeout: 5  # seconds to wait for agents to spawn
+  health_check_timeout: 2  # seconds to wait for health checks

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADCL Platform - Reimagined</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #FF6B35;
+            --bg-dark: #0A0E27;
+            --bg-card: #131832;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #FF8F6B);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .command-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .command-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .kbd {
+            padding: 2px 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        /* Main Container */
+        .container {
+            margin-top: 60px;
+            padding: 64px 32px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 64px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFFFFF, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+        }
+
+        /* Quick Start Cards */
+        .quick-start {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            margin-bottom: 64px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), #FF8F6B);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(255, 107, 53, 0.2);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent), #FF8F6B);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-action {
+            color: var(--accent);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Chat Input */
+        .chat-input-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, var(--bg-dark) 70%, transparent);
+            padding: 32px;
+            z-index: 90;
+        }
+
+        .chat-input-container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .active-agents {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .agent-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            font-size: 14px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .agent-status {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 120px 24px 24px;
+            font-size: 16px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), #FF8F6B);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Capabilities Strip */
+        .capabilities {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 24px 0;
+            margin: 32px 0;
+            scrollbar-width: none;
+        }
+
+        .capabilities::-webkit-scrollbar {
+            display: none;
+        }
+
+        .capability {
+            flex: 0 0 auto;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .capability:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .capability-icon {
+            font-size: 20px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Status Indicator */
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">A</div>
+            <span>ADCL Platform</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <div class="status">
+                <span class="status-dot"></span>
+                <span>All agents online</span>
+            </div>
+            <button class="command-btn">
+                <span>⌘</span>
+                <span>Command</span>
+                <span class="kbd">⌘K</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>What do you want to build?</h1>
+            <p>Deploy AI agent teams in seconds. No setup, just results.</p>
+        </div>
+
+        <!-- Capabilities Strip -->
+        <div class="capabilities">
+            <div class="capability">
+                <span class="capability-icon">🔍</span>
+                <span>Code Review</span>
+            </div>
+            <div class="capability">
+                <span class="capability-icon">🛡️</span>
+                <span>Security Analysis</span>
+            </div>
+            <div class="capability">
+                <span class="capability-icon">📊</span>
+                <span>Data Analysis</span>
+            </div>
+            <div class="capability">
+                <span class="capability-icon">🔧</span>
+                <span>System Integration</span>
+            </div>
+            <div class="capability">
+                <span class="capability-icon">📝</span>
+                <span>Documentation</span>
+            </div>
+            <div class="capability">
+                <span class="capability-icon">🚀</span>
+                <span>Deployment</span>
+            </div>
+            <div class="capability">
+                <span class="capability-icon">🧪</span>
+                <span>Testing</span>
+            </div>
+        </div>
+
+        <!-- Quick Start Cards -->
+        <div class="quick-start">
+            <div class="card">
+                <div class="card-icon">💬</div>
+                <h3>Start Chatting</h3>
+                <p>Talk to your AI agents naturally. Ask questions, get insights, and collaborate on complex tasks in real-time.</p>
+                <div class="card-action">
+                    Try it now →
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🤖</div>
+                <h3>Deploy an Agent</h3>
+                <p>Choose from pre-built agents or create your own. Security scanners, code reviewers, data analysts - all ready to work.</p>
+                <div class="card-action">
+                    Browse agents →
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">👥</div>
+                <h3>Build a Team</h3>
+                <p>Combine multiple agents into coordinated teams. Let them collaborate autonomously to solve complex problems.</p>
+                <div class="card-action">
+                    Create team →
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Input (Always Visible) -->
+    <div class="chat-input-wrapper">
+        <div class="chat-input-container">
+            <div class="active-agents">
+                <div class="agent-chip">
+                    <span class="agent-status"></span>
+                    <span>Code Review Team</span>
+                </div>
+                <div class="agent-chip">
+                    <span class="agent-status"></span>
+                    <span>Security Analyst</span>
+                </div>
+            </div>
+            <textarea
+                class="chat-input"
+                placeholder="Ask your agents anything... (⌘ + Enter to send)"
+                rows="1"
+            ></textarea>
+            <button class="send-btn">→</button>
+        </div>
+    </div>
+
+    <script>
+        // Auto-resize textarea
+        const textarea = document.querySelector('.chat-input');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        });
+
+        // Cmd+K for command palette (simulate)
+        document.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                alert('Command Palette would open here (⌘K)');
+            }
+        });
+
+        // Card click animations
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function() {
+                const action = this.querySelector('h3').textContent;
+                console.log('Card clicked:', action);
+            });
+        });
+    </script>
+</body>
+</html>

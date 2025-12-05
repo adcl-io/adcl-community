@@ -1,0 +1,76 @@
+{
+  "name": "linear",
+  "version": "1.0.0",
+  "description": "Linear API integration via OAuth",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": ".",
+      "dockerfile": "Dockerfile"
+    },
+    "image": "mcp-linear:1.0.0",
+    "container_name": "mcp-linear",
+    "ports": [
+      {
+        "host": "${LINEAR_PORT:-7005}",
+        "container": "${LINEAR_PORT:-7005}"
+      }
+    ],
+    "environment": {
+      "LINEAR_CLIENT_ID": "${LINEAR_CLIENT_ID}",
+      "LINEAR_CLIENT_SECRET": "${LINEAR_CLIENT_SECRET}",
+      "LINEAR_PORT": "${LINEAR_PORT:-7005}",
+      "PYTHONUNBUFFERED": "1"
+    },
+    "volumes": [
+      {
+        "host": "./volumes/credentials",
+        "container": "/app/volumes/credentials"
+      }
+    ],
+    "networks": ["mcp-network"],
+    "restart": "unless-stopped"
+  },
+  "requirements": {
+    "api_keys": ["LINEAR_CLIENT_ID", "LINEAR_CLIENT_SECRET"],
+    "min_memory": "256M",
+    "min_cpu": "0.25"
+  },
+  "tools": [
+    {
+      "name": "get_issue",
+      "description": "Get issue by ID"
+    },
+    {
+      "name": "create_agent_activity",
+      "description": "Create agent session activity"
+    },
+    {
+      "name": "set_issue_delegate",
+      "description": "Assign agent as delegate"
+    },
+    {
+      "name": "update_issue_state",
+      "description": "Update issue workflow state"
+    },
+    {
+      "name": "get_team_workflow_states",
+      "description": "Get team workflow states"
+    },
+    {
+      "name": "create_comment",
+      "description": "Add comment to issue"
+    },
+    {
+      "name": "get_current_user",
+      "description": "Get current user/agent info"
+    },
+    {
+      "name": "execute_query",
+      "description": "Execute raw GraphQL query"
+    }
+  ],
+  "tags": ["linear", "api", "integration", "oauth"],
+  "author": "ADCL Platform Team",
+  "license": "MIT"
+}

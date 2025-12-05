@@ -1,0 +1,68 @@
+{
+  "name": "nmap_recon",
+  "version": "1.0.0",
+  "description": "Network reconnaissance using Nmap (defensive security)",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": "./mcp_servers",
+      "dockerfile": "Dockerfile.nmap"
+    },
+    "image": "mcp-nmap-recon:1.0.0",
+    "container_name": "mcp-nmap-recon",
+    "network_mode": "host",
+    "volumes": [
+      {
+        "host": "./logs/nmap_recon",
+        "container": "/app/logs"
+      }
+    ],
+    "environment": {
+      "PYTHONUNBUFFERED": "1",
+      "NMAP_PORT": "${NMAP_PORT:-7003}",
+      "ALLOWED_SCAN_NETWORKS": "${ALLOWED_SCAN_NETWORKS:-192.168.50.0/24,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}",
+      "LOG_DIR": "/app/logs"
+    },
+    "cap_add": [
+      "NET_RAW",
+      "NET_ADMIN"
+    ],
+    "restart": "unless-stopped"
+  },
+  "requirements": {
+    "network_mode": "host",
+    "capabilities": [
+      "NET_RAW",
+      "NET_ADMIN"
+    ],
+    "min_memory": "256M",
+    "min_cpu": "0.25"
+  },
+  "tools": [
+    {
+      "name": "network_discovery",
+      "description": "Discover active hosts on network"
+    },
+    {
+      "name": "port_scan",
+      "description": "Scan ports on target host"
+    },
+    {
+      "name": "service_detection",
+      "description": "Detect services and versions"
+    },
+    {
+      "name": "vulnerability_scan",
+      "description": "Scan for known vulnerabilities"
+    }
+  ],
+  "tags": [
+    "security",
+    "scanning",
+    "network",
+    "nmap"
+  ],
+  "author": "MCP Platform Team",
+  "license": "MIT",
+  "security_note": "Defensive use only. Requires appropriate network permissions."
+}

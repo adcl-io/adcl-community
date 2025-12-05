@@ -1,0 +1,39 @@
+{
+  "name": "Security Assessment Team",
+  "description": "Multi-agent team for comprehensive security analysis with autonomous agents",
+  "version": "2.0.0",
+  "available_mcps": [
+    "nmap_recon",
+    "file_tools",
+    "agent"
+  ],
+  "agents": [
+    {
+      "agent_id": "security-analyst",
+      "role": "Lead Security Analyst",
+      "responsibilities": [
+        "Network reconnaissance",
+        "Vulnerability identification",
+        "Security report generation"
+      ],
+      "mcp_access": []
+    },
+    {
+      "agent_id": "research-assistant",
+      "role": "reporter ",
+      "responsibilities": [],
+      "mcp_access": []
+    }
+  ],
+  "coordination": {
+    "mode": "sequential",
+    "share_context": true,
+    "task_distribution": "automatic"
+  },
+  "tags": [
+    "security",
+    "multi-agent",
+    "autonomous"
+  ],
+  "author": "User"
+}

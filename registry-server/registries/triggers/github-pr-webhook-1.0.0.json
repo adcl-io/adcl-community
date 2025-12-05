@@ -1,0 +1,91 @@
+{
+  "name": "github-pr-webhook",
+  "version": "1.0.0",
+  "type": "trigger",
+  "publisher": "adcl-io",
+  "description": "GitHub webhook trigger with HMAC signature verification for PR events",
+  "metadata": {
+    "author": "ADCL Platform Team",
+    "license": "Proprietary",
+    "repository": "https://github.com/adcl-io/demo-sandbox",
+    "documentation": "https://docs.adcl.io/triggers/github-webhook"
+  },
+  "deployment": {
+    "image": "trigger-github-pr-webhook:1.0.0",
+    "build": {
+      "context": "./triggers/webhook",
+      "dockerfile": "Dockerfile.github"
+    },
+    "container_name": "trigger-github-pr-webhook",
+    "restart": "unless-stopped",
+    "ports": [
+      {
+        "host": "8101",
+        "container": "8101"
+      }
+    ],
+    "environment": {
+      "GITHUB_WEBHOOK_SECRET": "${GITHUB_WEBHOOK_SECRET}",
+      "FILTER_ACTIONS": "${FILTER_ACTIONS:-opened,synchronize}"
+    },
+    "volumes": []
+  },
+  "trigger": {
+    "type": "webhook",
+    "description": "GitHub PR webhook with HMAC verification",
+    "auth": {
+      "type": "hmac",
+      "header": "X-Hub-Signature-256",
+      "algorithm": "sha256"
+    },
+    "filters": {
+      "event_type": "pull_request",
+      "actions": ["opened", "synchronize", "reopened"]
+    },
+    "endpoints": [
+      {
+        "path": "/webhook",
+        "method": "POST",
+        "description": "Receive GitHub webhook and trigger workflow/team"
+      },
+      {
+        "path": "/health",
+        "method": "GET",
+        "description": "Health check endpoint"
+      }
+    ]
+  },
+  "action": {
+    "description": "Triggers user-configured workflow or team on PR events",
+    "params": {
+      "pr_number": "${event.pull_request.number}",
+      "pr_title": "${event.pull_request.title}",
+      "pr_author": "${event.pull_request.user.login}",
+      "pr_head_ref": "${event.pull_request.head.ref}",
+      "pr_base_ref": "${event.pull_request.base.ref}",
+      "repository": "${event.repository.full_name}",
+      "action": "${event.action}"
+    }
+  },
+  "examples": [
+    {
+      "name": "Install for code review workflow",
+      "request": {
+        "endpoint": "POST /registries/install/trigger/github-pr-webhook-1.0.0",
+        "body": {
+          "workflow_id": "code-review"
+        }
+      }
+    },
+    {
+      "name": "GitHub webhook configuration",
+      "steps": [
+        "Go to GitHub repo → Settings → Webhooks → Add webhook",
+        "Payload URL: http://your-server:8101/webhook",
+        "Content type: application/json",
+        "Secret: (set GITHUB_WEBHOOK_SECRET)",
+        "Events: Pull requests"
+      ]
+    }
+  ]
+}

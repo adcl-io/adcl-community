@@ -1,0 +1,59 @@
+{
+  "name": "Code Review Workflow",
+  "description": "Generate code and have it reviewed by the agent",
+  "nodes": [
+    {
+      "id": "generate-code",
+      "type": "mcp_call",
+      "mcp_server": "agent",
+      "tool": "code",
+      "params": {
+        "spec": "Create a Python function to calculate fibonacci numbers recursively",
+        "language": "python"
+      }
+    },
+    {
+      "id": "review-code",
+      "type": "mcp_call",
+      "mcp_server": "agent",
+      "tool": "review",
+      "params": {
+        "code": "${generate-code.code}"
+      }
+    },
+    {
+      "id": "save-code",
+      "type": "mcp_call",
+      "mcp_server": "file_tools",
+      "tool": "write_file",
+      "params": {
+        "path": "fibonacci.py",
+        "content": "${generate-code.code}"
+      }
+    },
+    {
+      "id": "save-review",
+      "type": "mcp_call",
+      "mcp_server": "file_tools",
+      "tool": "write_file",
+      "params": {
+        "path": "fibonacci_review.txt",
+        "content": "${review-code.feedback}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "generate-code",
+      "target": "review-code"
+    },
+    {
+      "source": "generate-code",
+      "target": "save-code"
+    },
+    {
+      "source": "review-code",
+      "target": "save-review"
+    }
+  ]
+}

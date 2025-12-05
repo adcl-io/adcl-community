@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADCL Platform - Composition Workshop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #FF6B35;
+            --accent-glow: rgba(255, 107, 53, 0.3);
+            --bg-dark: #0A0E27;
+            --bg-panel: #131832;
+            --bg-card: #1A1F3A;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+            --border: rgba(255, 255, 255, 0.1);
+            --success: #10B981;
+            --warning: #F59E0B;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            height: 56px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: relative;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #FF8F6B);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .command-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .command-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 56px);
+        }
+
+        /* Left Panel - MCP Servers */
+        .left-panel {
+            width: 280px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .add-btn {
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .mcp-server {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .mcp-server:hover {
+            border-color: var(--accent);
+            transform: translateX(4px);
+            box-shadow: -4px 0 8px var(--accent-glow);
+        }
+
+        .mcp-server:active {
+            cursor: grabbing;
+        }
+
+        .mcp-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .mcp-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #FF8F6B);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .mcp-name {
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .mcp-status {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        .mcp-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .mcp-tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .tool-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Center Panel - Workspace */
+        .center-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .workspace-tabs {
+            display: flex;
+            gap: 2px;
+            padding: 12px 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .workspace {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Active Agents Grid */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .agent-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #FF8F6B);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .agent-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .agent-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .agent-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .agent-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), #FF8F6B);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .agent-info {
+            flex: 1;
+        }
+
+        .agent-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .agent-type {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .agent-status-badge {
+            padding: 4px 10px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            font-size: 11px;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .agent-capabilities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .capability-chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .agent-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .action-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #FF8F6B;
+            transform: scale(1.05);
+        }
+
+        /* Right Panel - Details/Registry */
+        .right-panel {
+            width: 320px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .registry-search {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .registry-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .registry-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .registry-item:hover {
+            border-color: var(--accent);
+        }
+
+        .registry-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .registry-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .registry-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .install-btn {
+            padding: 4px 12px;
+            background: transparent;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            color: var(--accent);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .install-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .registry-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .registry-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .empty-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .cta-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent), #FF8F6B);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--accent-glow);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">A</div>
+            <span>ADCL Platform</span>
+        </div>
+        <div class="header-actions">
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                <span>4 agents running</span>
+            </div>
+            <button class="command-btn">
+                <span>⌘K</span>
+                <span>Command</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Left Panel: MCP Servers -->
+        <aside class="left-panel">
+            <div class="panel-header">
+                <div class="panel-title">MCP Servers</div>
+                <button class="add-btn">+</button>
+            </div>
+            <div class="panel-content">
+                <div class="mcp-server" draggable="true">
+                    <div class="mcp-header">
+                        <div class="mcp-icon">📁</div>
+                        <div class="mcp-name">file_tools</div>
+                        <div class="mcp-status"></div>
+                    </div>
+                    <div class="mcp-description">Read, write, and manage files</div>
+                    <div class="mcp-tools">
+                        <span class="tool-tag">read</span>
+                        <span class="tool-tag">write</span>
+                        <span class="tool-tag">list</span>
+                    </div>
+                </div>
+
+                <div class="mcp-server" draggable="true">
+                    <div class="mcp-header">
+                        <div class="mcp-icon">🔍</div>
+                        <div class="mcp-name">nmap_recon</div>
+                        <div class="mcp-status"></div>
+                    </div>
+                    <div class="mcp-description">Network scanning and discovery</div>
+                    <div class="mcp-tools">
+                        <span class="tool-tag">scan</span>
+                        <span class="tool-tag">detect</span>
+                        <span class="tool-tag">analyze</span>
+                    </div>
+                </div>
+
+                <div class="mcp-server" draggable="true">
+                    <div class="mcp-header">
+                        <div class="mcp-icon">📝</div>
+                        <div class="mcp-name">history</div>
+                        <div class="mcp-status"></div>
+                    </div>
+                    <div class="mcp-description">Session history and search</div>
+                    <div class="mcp-tools">
+                        <span class="tool-tag">search</span>
+                        <span class="tool-tag">query</span>
+                    </div>
+                </div>
+
+                <div class="mcp-server" draggable="true">
+                    <div class="mcp-header">
+                        <div class="mcp-icon">🛡️</div>
+                        <div class="mcp-name">kali_tools</div>
+                        <div class="mcp-status"></div>
+                    </div>
+                    <div class="mcp-description">Security testing toolkit</div>
+                    <div class="mcp-tools">
+                        <span class="tool-tag">exploit</span>
+                        <span class="tool-tag">analyze</span>
+                        <span class="tool-tag">report</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Panel: Workspace -->
+        <main class="center-panel">
+            <div class="workspace-tabs">
+                <button class="tab active">Active Agents</button>
+                <button class="tab">Workflows</button>
+                <button class="tab">Teams</button>
+                <button class="tab">Compose</button>
+            </div>
+            <div class="workspace">
+                <div class="section-title">Running Agents</div>
+                <div class="agents-grid">
+                    <div class="agent-card">
+                        <div class="agent-card-header">
+                            <div class="agent-avatar">🤖</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Code Reviewer</div>
+                                <div class="agent-type">Analysis Agent</div>
+                            </div>
+                            <div class="agent-status-badge">Active</div>
+                        </div>
+                        <div class="agent-capabilities">
+                            <div class="capability-chip">
+                                <span>📁</span>
+                                <span>file_tools</span>
+                            </div>
+                        </div>
+                        <div class="agent-actions">
+                            <button class="action-btn primary">Chat</button>
+                            <button class="action-btn">Configure</button>
+                            <button class="action-btn">Stop</button>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-card-header">
+                            <div class="agent-avatar">🔒</div>
+                            <div class="agent-info">
+                                <div class="agent-name">Security Analyst</div>
+                                <div class="agent-type">Security Agent</div>
+                            </div>
+                            <div class="agent-status-badge">Active</div>
+                        </div>
+                        <div class="agent-capabilities">
+                            <div class="capability-chip">
+                                <span>🔍</span>
+                                <span>nmap_recon</span>
+                            </div>
+                            <div class="capability-chip">
+                                <span>🛡️</span>
+                                <span>kali_tools</span>
+                            </div>
+                        </div>
+                        <div class="agent-actions">
+                            <button class="action-btn primary">Chat</button>
+                            <button class="action-btn">Configure</button>
+                            <button class="action-btn">Stop</button>
+                        </div>
+                    </div>
+
+                    <!-- Empty slot for new agent -->
+                    <div class="agent-card" style="border: 2px dashed var(--border); background: transparent;">
+                        <div class="empty-state" style="padding: 40px 20px;">
+                            <div class="empty-icon">+</div>
+                            <div class="empty-title" style="font-size: 16px;">Create Agent</div>
+                            <div class="empty-description" style="font-size: 13px; margin-bottom: 16px;">
+                                Drag MCP servers to compose a new agent
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel: Registry -->
+        <aside class="right-panel">
+            <div class="panel-header">
+                <div class="panel-title">Registry</div>
+            </div>
+            <div class="registry-search">
+                <input type="text" class="search-input" placeholder="Search MCP servers...">
+            </div>
+            <div class="registry-items">
+                <div class="registry-item">
+                    <div class="registry-header">
+                        <div class="registry-icon">🐙</div>
+                        <div class="registry-name">git_tools</div>
+                        <button class="install-btn">Install</button>
+                    </div>
+                    <div class="registry-description">
+                        Git operations: clone, commit, push, PR management
+                    </div>
+                    <div class="registry-meta">
+                        <span>⭐ 245</span>
+                        <span>v2.1.0</span>
+                        <span>Official</span>
+                    </div>
+                </div>
+
+                <div class="registry-item">
+                    <div class="registry-header">
+                        <div class="registry-icon">🌐</div>
+                        <div class="registry-name">web_scraper</div>
+                        <button class="install-btn">Install</button>
+                    </div>
+                    <div class="registry-description">
+                        Fetch and parse web pages, extract data
+                    </div>
+                    <div class="registry-meta">
+                        <span>⭐ 189</span>
+                        <span>v1.4.2</span>
+                        <span>Community</span>
+                    </div>
+                </div>
+
+                <div class="registry-item">
+                    <div class="registry-header">
+                        <div class="registry-icon">💾</div>
+                        <div class="registry-name">database</div>
+                        <button class="install-btn">Install</button>
+                    </div>
+                    <div class="registry-description">
+                        SQL/NoSQL database queries and operations
+                    </div>
+                    <div class="registry-meta">
+                        <span>⭐ 312</span>
+                        <span>v3.0.1</span>
+                        <span>Official</span>
+                    </div>
+                </div>
+
+                <div class="registry-item">
+                    <div class="registry-header">
+                        <div class="registry-icon">🤖</div>
+                        <div class="registry-name">slack_bot</div>
+                        <button class="install-btn">Install</button>
+                    </div>
+                    <div class="registry-description">
+                        Send messages, read channels, manage workspace
+                    </div>
+                    <div class="registry-meta">
+                        <span>⭐ 156</span>
+                        <span>v1.2.0</span>
+                        <span>Community</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Drag and drop simulation
+        document.querySelectorAll('.mcp-server').forEach(server => {
+            server.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                server.style.opacity = '0.5';
+            });
+
+            server.addEventListener('dragend', (e) => {
+                server.style.opacity = '1';
+            });
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        // Command palette
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                alert('Command palette would open here');
+            }
+        });
+    </script>
+</body>
+</html>

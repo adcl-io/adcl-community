@@ -1,0 +1,59 @@
+{
+  "name": "file_tools",
+  "version": "1.0.0",
+  "description": "File operations (read/write/list)",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": ".",
+      "dockerfile": "Dockerfile"
+    },
+    "image": "mcp-file-tools:1.0.0",
+    "container_name": "mcp-file-tools",
+    "ports": [
+      {
+        "host": "${FILE_TOOLS_PORT:-7002}",
+        "container": "${FILE_TOOLS_PORT:-7002}"
+      }
+    ],
+    "volumes": [
+      {
+        "host": "/app/workspace_shared",
+        "container": "/workspace"
+      },
+      {
+        "host": "./logs/file_tools",
+        "container": "/app/logs"
+      }
+    ],
+    "environment": {
+      "WORKSPACE_DIR": "/workspace",
+      "PYTHONUNBUFFERED": "1",
+      "FILE_TOOLS_PORT": "${FILE_TOOLS_PORT:-7002}",
+      "LOG_DIR": "/app/logs"
+    },
+    "networks": ["mcp-network"],
+    "restart": "unless-stopped"
+  },
+  "requirements": {
+    "min_memory": "256M",
+    "min_cpu": "0.25"
+  },
+  "tools": [
+    {
+      "name": "read_file",
+      "description": "Read file contents"
+    },
+    {
+      "name": "write_file",
+      "description": "Write content to file"
+    },
+    {
+      "name": "list_directory",
+      "description": "List directory contents"
+    }
+  ],
+  "tags": ["files", "filesystem", "io"],
+  "author": "MCP Platform Team",
+  "license": "MIT"
+}

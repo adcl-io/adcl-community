@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADCL Platform - Revolutionary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #FF6B35;
+            --bg-dark: #0B0F1A;
+            --bg-canvas: #0F1419;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8B95A8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Minimal Header */
+        .header {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-btn {
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* Canvas with dot grid */
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-canvas);
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Zoom indicator */
+        .zoom-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            z-index: 1000;
+        }
+
+        /* Active workflow with THICK connections */
+        .active-workflow {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            gap: 140px;
+        }
+
+        .workflow-node {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: nodeFloat 4s ease-in-out infinite;
+        }
+
+        .workflow-node:nth-child(2) { animation-delay: 0.7s; }
+        .workflow-node:nth-child(3) { animation-delay: 1.4s; }
+
+        .node-box {
+            width: 140px;
+            height: 140px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 3px solid rgba(255, 107, 53, 0.6);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow:
+                0 0 40px rgba(255, 107, 53, 0.4),
+                0 0 80px rgba(255, 107, 53, 0.2),
+                inset 0 0 40px rgba(255, 107, 53, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .node-box::before {
+            content: '';
+            position: absolute;
+            inset: -150%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 107, 53, 0.4) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        .node-icon {
+            font-size: 56px;
+            filter: drop-shadow(0 4px 16px rgba(255, 107, 53, 0.8));
+        }
+
+        .node-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .node-status {
+            position: absolute;
+            bottom: -50px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(255, 107, 53, 0.8);
+            animation: statusPulse 2s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        /* THICK glowing connections */
+        .connection {
+            position: absolute;
+            width: 120px;
+            height: 10px;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 10px;
+            background: linear-gradient(90deg,
+                rgba(255, 107, 53, 0.8),
+                rgba(255, 107, 53, 1),
+                rgba(255, 107, 53, 0.8));
+            box-shadow:
+                0 0 20px rgba(255, 107, 53, 0.8),
+                0 0 40px rgba(255, 107, 53, 0.4);
+            border-radius: 5px;
+            overflow: visible;
+        }
+
+        /* Multiple data particles */
+        .data-particle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #FFF;
+            border-radius: 50%;
+            top: -2px;
+            animation: flowParticle 1.5s ease-in-out infinite;
+            box-shadow:
+                0 0 20px rgba(255, 255, 255, 1),
+                0 0 40px rgba(255, 107, 53, 0.8);
+        }
+
+        .data-particle:nth-child(1) { animation-delay: 0s; }
+        .data-particle:nth-child(2) { animation-delay: 0.3s; }
+        .data-particle:nth-child(3) { animation-delay: 0.6s; }
+        .data-particle:nth-child(4) { animation-delay: 0.9s; }
+        .data-particle:nth-child(5) { animation-delay: 1.2s; }
+
+        /* Floating tools with NO backgrounds */
+        .tool-cluster {
+            position: fixed;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            height: 300px;
+            pointer-events: none;
+        }
+
+        .floating-tool {
+            position: absolute;
+            pointer-events: all;
+            cursor: grab;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .floating-tool:hover {
+            transform: translateY(-20px) scale(1.1);
+            z-index: 100;
+        }
+
+        .floating-tool:active {
+            cursor: grabbing;
+        }
+
+        .tool-icon-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tool-glow {
+            position: absolute;
+            inset: -40px;
+            border-radius: 50%;
+            filter: blur(30px);
+            opacity: 0.4;
+            z-index: -1;
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        .tool-icon-large {
+            font-size: 120px;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+            animation: iconFloat 4s ease-in-out infinite;
+        }
+
+        .tool-activity-huge {
+            margin-top: 16px;
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(255, 107, 53, 0.8);
+            animation: activityPulse 1.5s ease-in-out infinite;
+        }
+
+        .tool-label {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Tool positioning - overlapping and varied */
+        .tool-files {
+            bottom: 100px;
+            left: 10%;
+            z-index: 10;
+        }
+
+        .tool-files .tool-glow {
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.6), transparent);
+        }
+
+        .tool-network {
+            bottom: 60px;
+            left: 25%;
+            z-index: 8;
+        }
+
+        .tool-network .tool-glow {
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.6), transparent);
+        }
+
+        .tool-network .tool-icon-large {
+            animation-delay: 0.5s;
+        }
+
+        .tool-security {
+            bottom: 120px;
+            left: 40%;
+            z-index: 9;
+        }
+
+        .tool-security .tool-glow {
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.6), transparent);
+        }
+
+        .tool-security .tool-icon-large {
+            animation-delay: 1s;
+        }
+
+        .tool-database {
+            bottom: 80px;
+            left: 55%;
+            z-index: 7;
+        }
+
+        .tool-database .tool-glow {
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.6), transparent);
+        }
+
+        .tool-database .tool-icon-large {
+            animation-delay: 1.5s;
+            font-size: 90px;
+        }
+
+        .tool-git {
+            bottom: 90px;
+            left: 70%;
+            z-index: 6;
+        }
+
+        .tool-git .tool-glow {
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.6), transparent);
+        }
+
+        .tool-git .tool-icon-large {
+            animation-delay: 2s;
+            font-size: 80px;
+        }
+
+        /* Success stories - scattered and rotated */
+        .stories-cluster {
+            position: fixed;
+            top: 100px;
+            right: 40px;
+            width: 450px;
+            height: 500px;
+            pointer-events: none;
+        }
+
+        .story-card {
+            position: absolute;
+            width: 320px;
+            background: rgba(15, 20, 25, 0.95);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 24px;
+            pointer-events: all;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .story-card:hover {
+            transform: scale(1.05) rotate(0deg) !important;
+            z-index: 100 !important;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Featured story - TWICE as big */
+        .story-featured {
+            width: 400px;
+            top: 0;
+            left: 0;
+            transform: rotate(-2deg);
+            z-index: 10;
+            border-color: var(--accent);
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(255, 107, 53, 0.2);
+        }
+
+        .story-card-2 {
+            top: 180px;
+            left: 50px;
+            transform: rotate(3deg);
+            z-index: 8;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .story-card-3 {
+            top: 320px;
+            left: -10px;
+            transform: rotate(-1deg);
+            z-index: 6;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .story-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .user-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .story-result {
+            background: rgba(16, 185, 129, 0.15);
+            border-left: 4px solid #10B981;
+            padding: 16px 18px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .result-text {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .result-text strong {
+            color: var(--accent);
+            font-weight: 800;
+        }
+
+        .story-tools {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .story-tool-tag {
+            font-size: 11px;
+            padding: 5px 12px;
+            background: rgba(255, 107, 53, 0.2);
+            border: 1px solid rgba(255, 107, 53, 0.4);
+            border-radius: 10px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .story-action {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .story-action:hover {
+            color: #FF8F6B;
+            transform: translateX(4px);
+        }
+
+        /* Sketch annotation on one card */
+        .sketch-note {
+            position: absolute;
+            bottom: -30px;
+            right: -20px;
+            background: #FFE66D;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #000;
+            font-family: 'Comic Sans MS', cursive;
+            transform: rotate(5deg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 1px dashed #000;
+        }
+
+        /* Animations */
+        @keyframes nodeFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        @keyframes flowParticle {
+            0% { left: -10px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: calc(100% + 10px); opacity: 0; }
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+
+        @keyframes activityPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <button class="header-btn">⌘K</button>
+        <button class="header-btn">💾</button>
+    </div>
+
+    <!-- Zoom indicator -->
+    <div class="zoom-indicator">75%</div>
+
+    <!-- Canvas -->
+    <div class="canvas-container">
+        <!-- Active workflow with THICK connections -->
+        <div class="active-workflow">
+            <!-- Node 1 -->
+            <div class="workflow-node">
+                <div class="node-box">
+                    <div class="node-icon">📁</div>
+                    <div class="node-name">Files</div>
+                    <div class="connection">
+                        <div class="data-particle"></div>
+                        <div class="data-particle"></div>
+                        <div class="data-particle"></div>
+                        <div class="data-particle"></div>
+                        <div class="data-particle"></div>
+                    </div>
+                </div>
+                <div class="node-status">247 files/sec</div>
+            </div>
+
+            <!-- Node 2 -->
+            <div class="workflow-node">
+                <div class="node-box">
+                    <div class="node-icon">🤖</div>
+                    <div class="node-name">Agent</div>
+                    <div class="connection">
+                        <div class="data-particle"></div>
+                        <div class="data-particle"></div>
+                        <div class="data-particle"></div>
+                        <div class="data-particle"></div>
+                        <div class="data-particle"></div>
+                    </div>
+                </div>
+                <div class="node-status">Processing...</div>
+            </div>
+
+            <!-- Node 3 -->
+            <div class="workflow-node">
+                <div class="node-box">
+                    <div class="node-icon">🛡️</div>
+                    <div class="node-name">Security</div>
+                </div>
+                <div class="node-status">12 issues found</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating tools - NO BOXES -->
+    <div class="tool-cluster">
+        <!-- File tools - LARGEST -->
+        <div class="floating-tool tool-files" draggable="true">
+            <div class="tool-icon-wrapper">
+                <div class="tool-glow"></div>
+                <div class="tool-icon-large">📁</div>
+            </div>
+            <div class="tool-activity-huge">247/s</div>
+            <div class="tool-label">file_tools</div>
+        </div>
+
+        <!-- Network -->
+        <div class="floating-tool tool-network" draggable="true">
+            <div class="tool-icon-wrapper">
+                <div class="tool-glow"></div>
+                <div class="tool-icon-large">🔍</div>
+            </div>
+            <div class="tool-activity-huge">Scanning</div>
+            <div class="tool-label">nmap_recon</div>
+        </div>
+
+        <!-- Security -->
+        <div class="floating-tool tool-security" draggable="true">
+            <div class="tool-icon-wrapper">
+                <div class="tool-glow"></div>
+                <div class="tool-icon-large">🛡️</div>
+            </div>
+            <div class="tool-activity-huge">Active</div>
+            <div class="tool-label">kali_tools</div>
+        </div>
+
+        <!-- Database - smaller -->
+        <div class="floating-tool tool-database" draggable="true">
+            <div class="tool-icon-wrapper">
+                <div class="tool-glow"></div>
+                <div class="tool-icon-large">💾</div>
+            </div>
+            <div class="tool-activity-huge" style="font-size: 22px;">3.2K/s</div>
+            <div class="tool-label">database</div>
+        </div>
+
+        <!-- Git - smallest -->
+        <div class="floating-tool tool-git" draggable="true">
+            <div class="tool-icon-wrapper">
+                <div class="tool-glow"></div>
+                <div class="tool-icon-large">🐙</div>
+            </div>
+            <div class="tool-activity-huge" style="font-size: 20px;">12 repos</div>
+            <div class="tool-label">git_tools</div>
+        </div>
+    </div>
+
+    <!-- Success stories - scattered and rotated -->
+    <div class="stories-cluster">
+        <!-- Featured story - TWICE AS BIG -->
+        <div class="story-card story-featured">
+            <div class="story-header">
+                <div class="user-avatar">SJ</div>
+                <div class="user-info">
+                    <div class="user-name">Sarah Johnson</div>
+                    <div class="user-title">Security Lead @ Stripe</div>
+                </div>
+            </div>
+            <div class="story-result">
+                <div class="result-text">Protected payment API from zero-day exploit. Detected in <strong>4 minutes</strong>, patched before any customer impact.</div>
+            </div>
+            <div class="story-tools">
+                <span class="story-tool-tag">nmap_recon</span>
+                <span class="story-tool-tag">kali_tools</span>
+            </div>
+            <div class="story-action">Try this workflow →</div>
+        </div>
+
+        <!-- Story 2 -->
+        <div class="story-card story-card-2">
+            <div class="story-header">
+                <div class="user-avatar" style="background: linear-gradient(135deg, #10B981, #3B82F6);">MK</div>
+                <div class="user-info">
+                    <div class="user-name">Marcus Kim</div>
+                    <div class="user-title">DevOps @ Airbnb</div>
+                </div>
+            </div>
+            <div class="story-result">
+                <div class="result-text">Saved <strong>$47K/month</strong> in AWS costs. Automated file cleanup across 200+ S3 buckets.</div>
+            </div>
+            <div class="story-tools">
+                <span class="story-tool-tag">file_tools</span>
+                <span class="story-tool-tag">database</span>
+            </div>
+            <div class="story-action">Try this workflow →</div>
+            <div class="sketch-note">💰 Huge win!</div>
+        </div>
+
+        <!-- Story 3 -->
+        <div class="story-card story-card-3">
+            <div class="story-header">
+                <div class="user-avatar" style="background: linear-gradient(135deg, #F59E0B, #EF4444); width: 48px; height: 48px; font-size: 20px;">AP</div>
+                <div class="user-info">
+                    <div class="user-name" style="font-size: 15px;">Alex Patel</div>
+                    <div class="user-title">CTO @ TechCorp</div>
+                </div>
+            </div>
+            <div class="story-result">
+                <div class="result-text" style="font-size: 14px;">Migrated <strong>2.3M files</strong> overnight. Zero downtime, zero data loss.</div>
+            </div>
+            <div class="story-tools">
+                <span class="story-tool-tag">file_tools</span>
+            </div>
+            <div class="story-action" style="font-size: 13px;">Try this →</div>
+        </div>
+    </div>
+
+    <script>
+        // Drag and drop
+        document.querySelectorAll('[draggable="true"]').forEach(tool => {
+            tool.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                tool.style.opacity = '0.5';
+            });
+
+            tool.addEventListener('dragend', (e) => {
+                tool.style.opacity = '1';
+            });
+        });
+
+        // Canvas drop
+        const canvas = document.querySelector('.canvas-container');
+        canvas.addEventListener('dragover', (e) => e.preventDefault());
+        canvas.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const flash = document.createElement('div');
+            flash.style.cssText = `
+                position: fixed;
+                left: ${e.clientX - 100}px;
+                top: ${e.clientY - 100}px;
+                width: 200px;
+                height: 200px;
+                background: radial-gradient(circle, rgba(255, 107, 53, 0.6), transparent);
+                border-radius: 50%;
+                pointer-events: none;
+            `;
+            document.body.appendChild(flash);
+            flash.animate([
+                { transform: 'scale(0)', opacity: 1 },
+                { transform: 'scale(2)', opacity: 0 }
+            ], { duration: 600, easing: 'ease-out' });
+            setTimeout(() => flash.remove(), 600);
+        });
+    </script>
+</body>
+</html>

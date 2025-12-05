@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADCL Platform - Control Center</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #13131a;
+            --bg-elevated: #1a1a24;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --danger-glow: rgba(239, 68, 68, 0.5);
+
+            --success: #10b981;
+            --success-dark: #059669;
+            --success-glow: rgba(16, 185, 129, 0.5);
+
+            --border: #27272a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .header {
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .header-status {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+        }
+
+        .main-content {
+            padding: 0;
+            position: relative;
+        }
+
+        /* Critical Alert - Dominant */
+        .critical-section {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border: 3px solid var(--danger);
+            margin: 24px;
+            padding: 48px;
+            border-radius: 16px;
+            position: relative;
+            box-shadow: 0 0 60px var(--danger-glow);
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .alert-icon {
+            font-size: 72px;
+            line-height: 1;
+            flex-shrink: 0;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: var(--danger);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .alert-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--danger);
+        }
+
+        .alert-location {
+            font-size: 16px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .code-block {
+            background: var(--bg-elevated);
+            border: 2px solid var(--danger-dark);
+            border-left: 6px solid var(--danger);
+            padding: 24px;
+            margin: 24px 0;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 18px;
+            line-height: 1.8;
+            border-radius: 8px;
+            color: var(--text-primary);
+        }
+
+        .alert-description {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+        }
+
+        /* ACTION SECTION - This is the star */
+        .action-section {
+            margin-bottom: 32px;
+        }
+
+        .action-label {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        /* PRIMARY ACTION - MASSIVE */
+        .primary-action {
+            width: 100%;
+            padding: 48px 72px;
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 32px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 16px 48px var(--danger-glow), 0 0 0 3px rgba(239, 68, 68, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            letter-spacing: 1px;
+        }
+
+        .primary-action:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 64px var(--danger-glow), 0 0 0 3px var(--danger);
+        }
+
+        .primary-action:active {
+            transform: translateY(-2px);
+        }
+
+        .primary-action-icon {
+            font-size: 48px;
+        }
+
+        /* Secondary Actions - Power Tools */
+        .secondary-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .secondary-action {
+            padding: 16px 24px;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .secondary-action:hover {
+            background: var(--bg-secondary);
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+        }
+
+        /* Workflow Integration - Clearly Subordinate */
+        .workflow-section {
+            margin: 24px;
+            padding: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            opacity: 0.7;
+        }
+
+        .workflow-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .workflow-step {
+            background: var(--bg-elevated);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .workflow-step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .workflow-step-icon {
+            font-size: 24px;
+        }
+
+        .workflow-step-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .workflow-step-status {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .workflow-step-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .workflow-step-badge.success {
+            background: var(--success);
+        }
+
+        /* Success State - Transformation */
+        .success-section {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 3px solid var(--success);
+            margin: 24px;
+            padding: 48px;
+            border-radius: 16px;
+            box-shadow: 0 0 60px var(--success-glow);
+            display: none;
+        }
+
+        .success-section.active {
+            display: block;
+            animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            font-size: 80px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .success-title {
+            font-size: 36px;
+            font-weight: 800;
+            text-align: center;
+            color: var(--success);
+            margin-bottom: 16px;
+        }
+
+        .success-description {
+            font-size: 18px;
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .success-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .success-stat {
+            text-align: center;
+            padding: 24px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+        }
+
+        .success-stat-value {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--success);
+            margin-bottom: 8px;
+        }
+
+        .success-stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .continue-button {
+            width: 100%;
+            padding: 24px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .continue-button:hover {
+            background: var(--success-dark);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-title">ADCL Control Center</div>
+                <div class="header-status">Security Scan Pipeline • 3 Critical Issues</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Critical Alert State -->
+            <div class="critical-section" id="criticalSection">
+                <div class="alert-header">
+                    <div class="alert-icon">⚡</div>
+                    <div class="alert-content">
+                        <div class="alert-badge">CRITICAL</div>
+                        <div class="alert-location">📄 src/auth/login.js:47</div>
+                    </div>
+                </div>
+
+                <h1 class="alert-title">SQL Injection Vulnerability</h1>
+
+                <div class="code-block">query = "SELECT * FROM users WHERE id=" + userId</div>
+
+                <div class="alert-description">
+                    Unescaped user input directly concatenated into SQL query. Attacker can inject arbitrary SQL commands to read, modify, or delete database contents. This vulnerability could lead to complete database compromise.
+                </div>
+
+                <div class="action-section">
+                    <div class="action-label">TAKE CONTROL</div>
+                    <button class="primary-action" onclick="fixVulnerability()">
+                        <span class="primary-action-icon">⚡</span>
+                        <span>FIX VULNERABILITY NOW</span>
+                    </button>
+
+                    <div class="secondary-actions">
+                        <button class="secondary-action">
+                            <span>⏪</span> Rollback to Safe State
+                        </button>
+                        <button class="secondary-action">
+                            <span>🛡️</span> Enable Emergency Mode
+                        </button>
+                        <button class="secondary-action">
+                            <span>🔄</span> Auto-Patch Similar Issues
+                        </button>
+                        <button class="secondary-action">
+                            <span>📢</span> Alert Security Team
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success State (Hidden Initially) -->
+            <div class="success-section" id="successSection">
+                <div class="success-icon">✅</div>
+                <h1 class="success-title">Vulnerability Eliminated</h1>
+                <div class="success-description">
+                    SQL injection patched, parameterized queries implemented, all similar patterns secured across codebase.
+                </div>
+
+                <div class="success-stats">
+                    <div class="success-stat">
+                        <div class="success-stat-value">247</div>
+                        <div class="success-stat-label">Files Secured</div>
+                    </div>
+                    <div class="success-stat">
+                        <div class="success-stat-value">12</div>
+                        <div class="success-stat-label">Similar Issues Fixed</div>
+                    </div>
+                    <div class="success-stat">
+                        <div class="success-stat-value">100%</div>
+                        <div class="success-stat-label">Protection Level</div>
+                    </div>
+                </div>
+
+                <button class="continue-button" onclick="resetDemo()">Continue to Next Issue</button>
+            </div>
+
+            <!-- Workflow Section - Clearly Subordinate -->
+            <div class="workflow-section" id="workflowSection">
+                <div class="workflow-title">Automated Security Pipeline</div>
+                <div class="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="workflow-step-header">
+                            <div class="workflow-step-icon">📁</div>
+                            <div class="workflow-step-title">File Scanner</div>
+                        </div>
+                        <div class="workflow-step-status">Processing: login.js</div>
+                        <div class="workflow-step-status">Progress: 247/1,247</div>
+                        <div class="workflow-step-badge">ACTIVE</div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-step-header">
+                            <div class="workflow-step-icon">🤖</div>
+                            <div class="workflow-step-title">Security Agent</div>
+                        </div>
+                        <div class="workflow-step-status">Issues: 3 CRITICAL</div>
+                        <div class="workflow-step-status">AI Status: 82%</div>
+                        <div class="workflow-step-badge">ACTIVE</div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-step-header">
+                            <div class="workflow-step-icon">📊</div>
+                            <div class="workflow-step-title">Report</div>
+                        </div>
+                        <div class="workflow-step-status">Status: Ready</div>
+                        <div class="workflow-step-status">Output: report.pdf</div>
+                        <div class="workflow-step-badge success">READY</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function fixVulnerability() {
+            // Hide critical section
+            document.getElementById('criticalSection').style.display = 'none';
+            // Hide workflow section
+            document.getElementById('workflowSection').style.display = 'none';
+            // Show success section with animation
+            document.getElementById('successSection').classList.add('active');
+        }
+
+        function resetDemo() {
+            // Show critical section
+            document.getElementById('criticalSection').style.display = 'block';
+            // Show workflow section
+            document.getElementById('workflowSection').style.display = 'block';
+            // Hide success section
+            document.getElementById('successSection').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

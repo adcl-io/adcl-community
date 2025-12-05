@@ -1,0 +1,18 @@
+{
+  "package_type": "team",
+  "name": "security-team",
+  "version": "1.0.0",
+  "created_at": "2025-10-17T14:50:58.683452",
+  "publisher": "unknown",
+  "description": "Comprehensive network security scanning and analysis",
+  "checksum": {
+    "sha256": "",
+    "md5": ""
+  },
+  "signature": {
+    "signed": false,
+    "signer": null,
+    "timestamp": null
+  },
+  "migrated_from": "registry-server/registries"
+}

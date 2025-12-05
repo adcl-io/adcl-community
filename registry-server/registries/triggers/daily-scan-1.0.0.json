@@ -1,0 +1,92 @@
+{
+  "name": "daily-scan",
+  "version": "1.0.0",
+  "type": "trigger",
+  "publisher": "adcl-io",
+  "description": "Cron-based schedule trigger for executing workflows at configured times",
+  "metadata": {
+    "author": "ADCL Platform Team",
+    "license": "Proprietary",
+    "repository": "https://github.com/adcl-io/demo-sandbox",
+    "documentation": "https://docs.adcl.io/triggers/schedule"
+  },
+  "deployment": {
+    "image": "trigger-daily-scan:1.0.0",
+    "build": {
+      "context": "./triggers/schedule",
+      "dockerfile": "Dockerfile.scheduler"
+    },
+    "container_name": "trigger-daily-scan",
+    "restart": "unless-stopped",
+    "environment": {
+      "CRON_EXPRESSION": "${CRON_EXPRESSION:-0 2 * * *}",
+      "TIMEZONE": "${TIMEZONE:-UTC}",
+      "TASK_DESCRIPTION": "${TASK_DESCRIPTION:-Execute scheduled task}"
+    },
+    "volumes": []
+  },
+  "trigger": {
+    "type": "schedule",
+    "description": "Cron-based scheduled execution",
+    "schedule": {
+      "cron_expression": "0 2 * * *",
+      "timezone": "UTC",
+      "description": "Daily at 2:00 AM UTC"
+    },
+    "examples": [
+      {
+        "description": "Every hour",
+        "cron_expression": "0 * * * *"
+      },
+      {
+        "description": "Every Monday at 9 AM",
+        "cron_expression": "0 9 * * 1"
+      },
+      {
+        "description": "Every 15 minutes",
+        "cron_expression": "*/15 * * * *"
+      }
+    ]
+  },
+  "action": {
+    "description": "Triggers user-configured workflow or team on schedule",
+    "params": {
+      "triggered_at": "${current_timestamp}",
+      "trigger_type": "schedule",
+      "cron_expression": "${CRON_EXPRESSION}"
+    }
+  },
+  "examples": [
+    {
+      "name": "Install for nightly security scan",
+      "request": {
+        "endpoint": "POST /registries/install/trigger/daily-scan-1.0.0",
+        "body": {
+          "team_id": "security-team"
+        }
+      }
+    },
+    {
+      "name": "Custom schedule (hourly)",
+      "description": "Override cron expression for hourly execution",
+      "environment": {
+        "CRON_EXPRESSION": "0 * * * *"
+      }
+    },
+    {
+      "name": "Weekly report (Mondays at 9 AM)",
+      "environment": {
+        "CRON_EXPRESSION": "0 9 * * 1",
+        "TIMEZONE": "America/New_York"
+      }
+    },
+    {
+      "name": "Nightly security scan with custom task",
+      "description": "Daily security scan with descriptive task for the team",
+      "environment": {
+        "CRON_EXPRESSION": "0 2 * * *",
+        "TASK_DESCRIPTION": "Perform nightly security scan of production infrastructure"
+      }
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "Linear Agent Workflow",
+  "description": "Orchestrates Linear agent analysis and response with conversation history",
+  "nodes": [
+    {
+      "id": "get-history",
+      "type": "mcp_call",
+      "mcp_server": "history",
+      "tool": "get_messages",
+      "params": {
+        "session_id": "${params.session_id}",
+        "limit": 50
+      }
+    },
+    {
+      "id": "get-issue",
+      "type": "mcp_call",
+      "mcp_server": "linear",
+      "tool": "get_issue",
+      "params": {
+        "issue_id": "${params.issue_id}"
+      }
+    },
+    {
+      "id": "invoke-agent",
+      "type": "mcp_call",
+      "mcp_server": "agent",
+      "tool": "think",
+      "params": {
+        "prompt": "You are a Linear issue analyst.\n\n## Issue Details\nTitle: ${get-issue.title}\nDescription: ${get-issue.description}\nState: ${get-issue.state}\nLabels: ${get-issue.labels}\n\n## Conversation History\n${get-history.formatted}\n\n## Current Request\nAction: ${params.action}\nPrompt: ${params.prompt}\n\n## Instructions\nAnalyze the issue and provide:\n1. Requirements summary\n2. Complexity assessment\n3. Dependencies and risks\n4. Implementation plan with steps, timeline, and resources\n\nFormat your response as a professional Linear comment."
+      }
+    },
+    {
+      "id": "post-comment",
+      "type": "mcp_call",
+      "mcp_server": "linear",
+      "tool": "create_comment",
+      "params": {
+        "issue_id": "${params.issue_id}",
+        "body": "${invoke-agent.reasoning}"
+      }
+    },
+    {
+      "id": "save-history",
+      "type": "mcp_call",
+      "mcp_server": "history",
+      "tool": "append_message",
+      "params": {
+        "session_id": "${params.session_id}",
+        "message_type": "assistant",
+        "content": "${invoke-agent.reasoning}"
+      }
+    }
+  ],
+  "edges": [
+    {"source": "get-history", "target": "get-issue"},
+    {"source": "get-issue", "target": "invoke-agent"},
+    {"source": "invoke-agent", "target": "post-comment"},
+    {"source": "post-comment", "target": "save-history"}
+  ]
+}

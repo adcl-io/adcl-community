@@ -1,0 +1,37 @@
+{
+  "models": {
+    "claude-sonnet-4-20250514": {
+      "name": "Claude Sonnet 4",
+      "input_per_million": 3.00,
+      "output_per_million": 15.00,
+      "aliases": ["claude-sonnet-4", "sonnet-4"]
+    },
+    "claude-sonnet-3-5-20241022": {
+      "name": "Claude Sonnet 3.5",
+      "input_per_million": 3.00,
+      "output_per_million": 15.00,
+      "aliases": ["claude-sonnet-3.5", "claude-3-5-sonnet", "sonnet-3.5"]
+    },
+    "claude-opus-4-20250514": {
+      "name": "Claude Opus 4",
+      "input_per_million": 15.00,
+      "output_per_million": 75.00,
+      "aliases": ["claude-opus-4", "opus-4"]
+    },
+    "claude-3-opus-20240229": {
+      "name": "Claude 3 Opus",
+      "input_per_million": 15.00,
+      "output_per_million": 75.00,
+      "aliases": ["claude-3-opus", "opus-3"]
+    },
+    "claude-haiku-3-5-20241022": {
+      "name": "Claude Haiku 3.5",
+      "input_per_million": 0.25,
+      "output_per_million": 1.25,
+      "aliases": ["claude-haiku-3.5", "claude-3-haiku", "haiku-3.5"]
+    }
+  },
+  "default_model": "claude-sonnet-4-20250514",
+  "last_updated": "2025-01-15",
+  "currency": "USD"
+}

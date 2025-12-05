@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Result Rendering</title>
+</head>
+<body>
+    <h1>Testing Result Rendering</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Simulate the save-report result that might be causing issues
+        const testResults = {
+            "port-scan": {
+                "target": "scanme.nmap.org",
+                "summary": {
+                    "open_ports": 2,
+                    "open_port_list": ["22/tcp", "80/tcp"]
+                }
+            },
+            "service-detection": {
+                "services": [
+                    {
+                        "port": "22",
+                        "service": {"name": "ssh", "product": "OpenSSH", "version": "6.6.1p1"}
+                    }
+                ]
+            },
+            "analyze-results": {
+                "reasoning": "Test reasoning"
+            },
+            "save-report": {
+                "path": "recon_report.txt",
+                "size": 168,
+                "success": true
+            }
+        };
+        
+        // Test if JSON.stringify causes any issues
+        console.log("Testing result rendering...");
+        Object.entries(testResults).forEach(([nodeId, data]) => {
+            try {
+                const jsonStr = JSON.stringify(data, null, 2);
+                console.log(`${nodeId}: ${jsonStr.length} bytes - OK`);
+            } catch (error) {
+                console.error(`${nodeId}: ERROR - ${error.message}`);
+            }
+        });
+        
+        document.getElementById('results').innerHTML = '<p>Check console for results</p>';
+    </script>
+</body>
+</html>

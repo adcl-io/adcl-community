@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  orchestrator:
+    image: ghcr.io/adcl-io/adcl-community/orchestrator:latest
+    container_name: adcl-orchestrator
+    ports:
+      - "${ORCHESTRATOR_PORT:-8000}:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./workspace:/app/workspace
+      - ./logs:/app/logs
+      - ./agent-definitions:/app/agent-definitions
+      - ./agent-teams:/app/agent-teams
+      - ./workflows:/app/workflows
+    networks:
+      - adcl-network
+
+  frontend:
+    image: ghcr.io/adcl-io/adcl-community/frontend:latest
+    container_name: adcl-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - VITE_API_URL=http://localhost:${ORCHESTRATOR_PORT:-8000}
+    depends_on:
+      - orchestrator
+    networks:
+      - adcl-network
+
+  registry:
+    image: ghcr.io/adcl-io/adcl-community/registry:latest
+    container_name: adcl-registry
+    ports:
+      - "${REGISTRY_PORT:-9000}:9000"
+    volumes:
+      - ./registry-data:/app/registry
+    networks:
+      - adcl-network
+
+networks:
+  adcl-network:
+    driver: bridge
