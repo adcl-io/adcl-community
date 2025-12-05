@@ -38,19 +38,18 @@ fi
 
 echo "🛑 Stopping and removing all containers..."
 
-# First, remove dynamically installed MCP containers
+# Remove ALL adcl-* containers (including stopped ones)
+echo "  └─ Removing all ADCL containers..."
+docker ps -a --filter "name=adcl-" --format "{{.Names}}" | xargs -r docker rm -f 2>/dev/null || true
+
+# Remove dynamically installed MCP containers
 echo "  └─ Removing dynamic MCP containers..."
 for container in mcp-agent mcp-file-tools mcp-nmap-recon mcp-history; do
-    if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
-        echo "     ├─ Stopping $container..."
-        docker stop $container 2>/dev/null || true
-        echo "     ├─ Removing $container..."
-        docker rm $container 2>/dev/null || true
-    fi
+    docker rm -f $container 2>/dev/null || true
 done
 
-# Then run docker-compose down
-docker-compose down
+# Clean up with docker-compose
+docker-compose down --remove-orphans 2>/dev/null || true
 
 if [ "$NUKE_MODE" = true ]; then
     echo ""
@@ -63,14 +62,21 @@ if [ "$NUKE_MODE" = true ]; then
 fi
 
 echo ""
-if [ "$NUKE_MODE" = true ]; then
-    echo "🚀 Starting services with FULL REBUILD (no cache)..."
-    docker-compose build --no-cache
+# Check if using GHCR images (community edition) or local build
+if grep -q "ghcr.io" docker-compose.yml 2>/dev/null; then
+    echo "🐳 Using GHCR images (pulling latest)..."
+    docker-compose pull
     docker-compose up -d
 else
-    echo "🚀 Starting services fresh..."
-    # Source code is now bind-mounted, so rebuilds are only needed for dependency changes
-    docker-compose up -d --build
+    if [ "$NUKE_MODE" = true ]; then
+        echo "🚀 Starting services with FULL REBUILD (no cache)..."
+        docker-compose build --no-cache
+        docker-compose up -d
+    else
+        echo "🚀 Starting services fresh..."
+        # Source code is now bind-mounted, so rebuilds are only needed for dependency changes
+        docker-compose up -d --build
+    fi
 fi
 
 echo ""

@@ -46,6 +46,11 @@ ENVEOF
     echo "✅ Created .env file"
 fi
 
+# Clean up any existing ADCL containers
+echo "🧹 Cleaning up old containers..."
+docker ps -a --filter "name=adcl-" --format "{{.Names}}" | xargs -r docker rm -f 2>/dev/null || true
+docker compose down --remove-orphans 2>/dev/null || true
+
 # Pull images from GHCR and start
 echo "🐳 Pulling images from GHCR..."
 docker compose pull
