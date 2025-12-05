@@ -21,15 +21,41 @@ fi
 
 # Create installation directory
 INSTALL_DIR="${HOME}/.adcl"
-mkdir -p "$INSTALL_DIR"
-cd "$INSTALL_DIR"
 
-# Download docker-compose.yml
-echo "📥 Downloading configuration..."
-curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/docker-compose.yml -o docker-compose.yml
+# Check if already installed
+if [ -d "$INSTALL_DIR" ]; then
+    echo "📁 ADCL directory exists at $INSTALL_DIR"
+    echo "   Updating installation..."
+    cd "$INSTALL_DIR"
+
+    # Pull latest changes if it's a git repo
+    if [ -d .git ]; then
+        git pull origin main 2>/dev/null || true
+    else
+        # Backup existing .env if it exists
+        [ -f .env ] && cp .env .env.backup
+
+        # Remove old files and re-clone
+        cd ..
+        rm -rf "$INSTALL_DIR"
+        git clone --depth 1 https://github.com/adcl-io/adcl-community.git "$INSTALL_DIR"
+        cd "$INSTALL_DIR"
+
+        # Restore .env
+        [ -f .env.backup ] && mv .env.backup .env
+    fi
+else
+    echo "📥 Downloading ADCL Community Edition..."
+    git clone --depth 1 https://github.com/adcl-io/adcl-community.git "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+fi
+
+# Create runtime directories
+mkdir -p workspace logs
 
 # Create .env if doesn't exist
 if [ ! -f .env ]; then
+    echo "⚙️  Configuring ADCL..."
     cat > .env <<'ENVEOF'
 # ADCL Platform Configuration
 ADCL_EDITION=community
@@ -44,6 +70,12 @@ FRONTEND_PORT=3000
 REGISTRY_PORT=9000
 ENVEOF
     echo "✅ Created .env file"
+    echo ""
+    echo "⚠️  Important: Add your API keys to ~/.adcl/.env before starting:"
+    echo "   ANTHROPIC_API_KEY=your-key-here"
+    echo "   OPENAI_API_KEY=your-key-here"
+    echo ""
+    read -p "Press Enter to continue or Ctrl+C to exit and add keys first..."
 fi
 
 # Clean up any existing ADCL containers
@@ -61,10 +93,16 @@ docker compose up -d
 echo ""
 echo "✅ ADCL Community Edition installed!"
 echo ""
-echo "Access at: http://localhost:3000"
+echo "🌐 Access the UI at: http://localhost:3000"
+echo "🔧 Backend API at: http://localhost:8000"
+echo ""
+echo "📁 Installation directory: $INSTALL_DIR"
 echo ""
 echo "Commands:"
-echo "  Stop:   docker compose down"
-echo "  Logs:   docker compose logs -f"
-echo "  Update: curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/install.sh | bash"
+echo "  Stop:      cd $INSTALL_DIR && docker compose down"
+echo "  Logs:      cd $INSTALL_DIR && docker compose logs -f"
+echo "  Status:    cd $INSTALL_DIR && docker compose ps"
+echo "  Update:    curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/install.sh | bash"
+echo ""
+echo "📚 Documentation: https://github.com/adcl-io/adcl-community"
 echo ""

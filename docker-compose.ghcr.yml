@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   orchestrator:
     image: ghcr.io/adcl-io/adcl-community/orchestrator:latest
@@ -9,14 +7,29 @@ services:
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ADCL_EDITION=community
+      - AUTO_INSTALL_MCPS=agent,file-tools,nmap-recon
+      - AGENT_PORT=7000
+      - FILE_TOOLS_PORT=7002
+      - NMAP_PORT=7003
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./workspace:/app/workspace
       - ./logs:/app/logs
       - ./agent-definitions:/app/agent-definitions
       - ./agent-teams:/app/agent-teams
       - ./workflows:/app/workflows
+      - ./mcp_servers:/app/mcp_servers:ro
+      - ./registry:/app/registry:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: root
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - adcl-network
+    depends_on:
+      - registry
+    restart: unless-stopped
 
   frontend:
     image: ghcr.io/adcl-io/adcl-community/frontend:latest
@@ -29,16 +42,20 @@ services:
       - orchestrator
     networks:
       - adcl-network
+    restart: unless-stopped
 
   registry:
     image: ghcr.io/adcl-io/adcl-community/registry:latest
     container_name: adcl-registry
     ports:
       - "${REGISTRY_PORT:-9000}:9000"
+    environment:
+      - PYTHONUNBUFFERED=1
     volumes:
-      - ./registry-data:/app/registry
+      - ./registry:/app/registry:ro
     networks:
       - adcl-network
+    restart: unless-stopped
 
 networks:
   adcl-network:
