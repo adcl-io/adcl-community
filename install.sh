@@ -71,15 +71,32 @@ REGISTRY_PORT=9000
 ENVEOF
     echo "✅ Created .env file"
     echo ""
-    echo "⚠️  Important: Add your API keys to ~/.adcl/.env before starting:"
+    echo "ℹ️  Remember to add your API keys to ~/.adcl/.env:"
     echo "   ANTHROPIC_API_KEY=your-key-here"
     echo "   OPENAI_API_KEY=your-key-here"
-    echo ""
-    read -p "Press Enter to continue or Ctrl+C to exit and add keys first..."
+fi
+
+# Check for port conflicts and auto-stop conflicting containers
+echo "🔍 Checking for port conflicts..."
+STOPPED_CONTAINERS=""
+for PORT in 3000 8000 9000; do
+    CONTAINER=$(docker ps --format '{{.Names}}\t{{.Ports}}' | grep -E ":${PORT}->" | awk '{print $1}' | head -1 || true)
+    if [ -n "$CONTAINER" ]; then
+        if [ -z "$STOPPED_CONTAINERS" ]; then
+            echo "🛑 Stopping conflicting containers to free up ports..."
+        fi
+        echo "  Stopping ${CONTAINER} (using port ${PORT})..."
+        docker stop "$CONTAINER" 2>/dev/null || true
+        STOPPED_CONTAINERS="${STOPPED_CONTAINERS} ${CONTAINER}"
+    fi
+done
+
+if [ -n "$STOPPED_CONTAINERS" ]; then
+    echo "✅ Stopped containers:${STOPPED_CONTAINERS}"
 fi
 
 # Clean up any existing ADCL containers
-echo "🧹 Cleaning up old containers..."
+echo "🧹 Cleaning up old ADCL containers..."
 docker ps -a --filter "name=adcl-" --format "{{.Names}}" | xargs -r docker rm -f 2>/dev/null || true
 docker compose down --remove-orphans 2>/dev/null || true
 

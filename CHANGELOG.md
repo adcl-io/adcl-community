@@ -1,3 +1,8 @@
+## [0.1.16] - 2025-12-05
+
+### Changes
+- Fix community release - add orchestrator and MCP support
+
 ## [0.1.15] - 2025-12-05
 
 ### Changes
