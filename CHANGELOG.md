@@ -1,3 +1,9 @@
+## [0.1.20] - 2025-12-05
+
+### Changes
+- Fix .env.example and registry health check
+- Complete .env.example with all required variables
+
 ## [0.1.19] - 2025-12-05
 
 ### Changes
