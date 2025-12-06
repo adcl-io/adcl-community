@@ -1,3 +1,8 @@
+## [0.1.22] - 2025-12-05
+
+### Changes
+- Fix MCP names - use underscores not hyphens
+
 ## [0.1.21] - 2025-12-05
 
 ### Changes

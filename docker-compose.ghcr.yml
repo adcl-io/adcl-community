@@ -8,7 +8,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ADCL_EDITION=community
-      - AUTO_INSTALL_MCPS=agent,file-tools,nmap-recon
+      - AUTO_INSTALL_MCPS=agent,file_tools,nmap_recon
       - AGENT_PORT=7000
       - FILE_TOOLS_PORT=7002
       - NMAP_PORT=7003
