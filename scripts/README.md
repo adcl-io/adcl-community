@@ -69,9 +69,9 @@ This creates:
 
 ## Publishing a Release
 
-### Quick Release (Fully Automated - Recommended)
+### Quick Release (Recommended)
 
-Use the all-in-one `release.sh` script - **completely automated, no prompts**:
+Use the all-in-one `release.sh` script with smart versioning:
 
 ```bash
 # Auto-increment patch version (0.1.0 → 0.1.1) - most common
@@ -84,24 +84,14 @@ Use the all-in-one `release.sh` script - **completely automated, no prompts**:
 
 # Or explicit version:
 ./scripts/release.sh 1.5.0
-
-# Optional flags:
-./scripts/release.sh patch --no-commit  # Skip git commit
-./scripts/release.sh patch --no-tag     # Skip git tag
 ```
 
-The script automatically:
-1. Increments version in VERSION file
-2. Auto-generates CHANGELOG.md from git commits
-3. Builds Docker images as tarballs
-4. Publishes to S3/CDN
-5. Commits changes to git
-6. Creates git tag
-
-**Then just push:**
-```bash
-git push origin main v0.1.1
-```
+The script will:
+1. Auto-increment version in VERSION file
+2. Prompt you to update CHANGELOG.md
+3. Build Docker images
+4. Publish to S3/CDN
+5. Optionally commit and tag
 
 ### Manual Workflow
 
@@ -185,34 +175,26 @@ ADCL follows [semver](https://semver.org/):
 
 ## Detailed Script Usage
 
-### release.sh (Recommended - Fully Automated)
+### release.sh (Recommended)
 
-All-in-one release workflow - completely automated with no prompts.
+All-in-one release workflow with smart versioning.
 
 ```bash
-./scripts/release.sh [patch|minor|major|X.Y.Z] [--no-commit] [--no-tag]
+./scripts/release.sh [patch|minor|major|X.Y.Z]
 
 # Examples:
-./scripts/release.sh          # Auto-increment patch, fully automated
+./scripts/release.sh          # Auto-increment patch
 ./scripts/release.sh minor    # New feature release
 ./scripts/release.sh 2.0.0    # Major version release
-./scripts/release.sh patch --no-commit  # Skip git commit
-./scripts/release.sh patch --no-tag     # Skip git tag
 ```
 
-**What it does (automatically):**
-1. Increments version in VERSION file
-2. Auto-generates CHANGELOG.md from git commits since last tag
-3. Builds Docker images as tarballs
-4. Publishes everything to S3/CloudFront
-5. Commits VERSION and CHANGELOG.md to git
-6. Creates annotated git tag
-
-**After running:**
-```bash
-# Just push to remote
-git push origin main v0.2.0
-```
+**What it does:**
+1. Increments version (or uses explicit version)
+2. Prompts to update CHANGELOG.md
+3. Builds Docker images
+4. Publishes to S3
+5. Optionally commits changes
+6. Optionally creates git tag
 
 ### bump-version.sh
 

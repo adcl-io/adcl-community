@@ -12,7 +12,10 @@ Enables teams of autonomous agents to collaborate on complex tasks
 from typing import Dict, List, Any, Optional
 import json
 import asyncio
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class TeamRuntime:
@@ -33,6 +36,10 @@ class TeamRuntime:
         self.agent_runtime = agent_runtime
         self.agents_dir = agents_dir
         self.teams_dir = teams_dir
+
+        # Add locks for thread-safe operations in parallel mode
+        self._results_lock = asyncio.Lock()
+        self._log_lock = asyncio.Lock()
 
     async def run_team(
         self,
@@ -203,23 +210,63 @@ class TeamRuntime:
                 }
             )
 
-            # Execute agent (pass progress_callback for real-time updates)
-            result = await self.agent_runtime.run_agent(
-                agent_definition=agent_def,
-                task=agent_task,
-                context=shared_context,
-                progress_callback=progress_callback,
-                session_id=session_id,
-                manager=manager,
-            )
+            # Execute agent with error handling
+            try:
+                result = await self.agent_runtime.run_agent(
+                    agent_definition=agent_def,
+                    task=agent_task,
+                    context=shared_context,
+                    progress_callback=progress_callback,
+                    session_id=session_id,
+                    manager=manager,
+                )
 
-            # Store result
+                # Check if agent reported error status
+                if result.get("status") == "error":
+                    error_msg = result.get("error", "Unknown error")
+                    logger.error(
+                        f"Agent {agent_id} failed with error: {error_msg}",
+                        extra={
+                            "agent_id": agent_id,
+                            "role": role,
+                            "team_id": team_def.get("id"),
+                        }
+                    )
+
+            except Exception as e:
+                # Agent runtime threw exception
+                import traceback
+                error_detail = traceback.format_exc()
+
+                logger.error(
+                    f"Agent {agent_id} crashed with exception: {str(e)}",
+                    extra={
+                        "agent_id": agent_id,
+                        "role": role,
+                        "team_id": team_def.get("id"),
+                        "traceback": error_detail,
+                    }
+                )
+
+                # Create error result
+                result = {
+                    "status": "error",
+                    "error": str(e),
+                    "traceback": error_detail,
+                    "answer": None,
+                    "tools_used": [],
+                    "iterations": 0,
+                    "reasoning_steps": [],
+                }
+
+            # Store result (success or error)
             agent_result = {
                 "agent_id": agent_id,
                 "role": role,
                 "status": result.get("status"),
                 "answer": result.get("answer"),
-                "error": result.get("error"),  # Include error details
+                "error": result.get("error"),
+                "traceback": result.get("traceback"),
                 "iterations": result.get("iterations"),
                 "tools_used": result.get("tools_used", []),
                 "reasoning_steps": result.get("reasoning_steps", []),
@@ -408,14 +455,51 @@ class TeamRuntime:
                     task, role, round_num, agent_results, shared_context
                 )
 
-                # Execute agent
-                result = await self.agent_runtime.run_agent(
-                    agent_definition=agent_def,
-                    task=agent_task,
-                    context=shared_context,
-                    session_id=session_id,
-                    manager=manager,
-                )
+                # Execute agent with error handling
+                try:
+                    result = await self.agent_runtime.run_agent(
+                        agent_definition=agent_def,
+                        task=agent_task,
+                        context=shared_context,
+                        session_id=session_id,
+                        manager=manager,
+                    )
+
+                    # Check if agent reported error status
+                    if result.get("status") == "error":
+                        error_msg = result.get("error", "Unknown error")
+                        logger.error(
+                            f"Agent {agent_id} (collaborative round {round_num}) failed with error: {error_msg}",
+                            extra={
+                                "agent_id": agent_id,
+                                "role": role,
+                                "round": round_num,
+                            }
+                        )
+
+                except Exception as e:
+                    # Agent runtime threw exception
+                    import traceback
+                    error_detail = traceback.format_exc()
+
+                    logger.error(
+                        f"Agent {agent_id} (collaborative round {round_num}) crashed with exception: {str(e)}",
+                        extra={
+                            "agent_id": agent_id,
+                            "role": role,
+                            "round": round_num,
+                            "traceback": error_detail,
+                        }
+                    )
+
+                    # Create error result
+                    result = {
+                        "status": "error",
+                        "error": str(e),
+                        "traceback": error_detail,
+                        "answer": None,
+                        "iterations": 0,
+                    }
 
                 round_result = {
                     "round": round_num,
@@ -423,7 +507,8 @@ class TeamRuntime:
                     "role": role,
                     "status": result.get("status"),
                     "answer": result.get("answer"),
-                    "error": result.get("error"),  # Include error details
+                    "error": result.get("error"),
+                    "traceback": result.get("traceback"),
                     "iterations": result.get("iterations"),
                 }
                 round_results.append(round_result)
@@ -463,42 +548,87 @@ class TeamRuntime:
     ):
         """Run agent with logging for parallel execution"""
 
-        team_log.append(
-            {
-                "timestamp": datetime.now().isoformat(),
-                "agent_id": agent_id,
-                "event": "started",
-                "message": f"Starting {role}",
+        # Log start (use lock for thread-safety)
+        async with self._log_lock:
+            team_log.append(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "agent_id": agent_id,
+                    "event": "started",
+                    "message": f"Starting {role}",
+                }
+            )
+
+        # Run agent with error handling (no lock needed - independent execution)
+        try:
+            result = await self.agent_runtime.run_agent(
+                agent_definition=agent_def,
+                task=task,
+                context=context,
+                session_id=session_id,
+                manager=manager,
+            )
+
+            # Check if agent reported error status
+            if result.get("status") == "error":
+                error_msg = result.get("error", "Unknown error")
+                logger.error(
+                    f"Agent {agent_id} (parallel mode) failed with error: {error_msg}",
+                    extra={
+                        "agent_id": agent_id,
+                        "role": role,
+                    }
+                )
+
+        except Exception as e:
+            # Agent runtime threw exception
+            import traceback
+            error_detail = traceback.format_exc()
+
+            logger.error(
+                f"Agent {agent_id} (parallel mode) crashed with exception: {str(e)}",
+                extra={
+                    "agent_id": agent_id,
+                    "role": role,
+                    "traceback": error_detail,
+                }
+            )
+
+            # Create error result
+            result = {
+                "status": "error",
+                "error": str(e),
+                "traceback": error_detail,
+                "answer": None,
+                "tools_used": [],
+                "iterations": 0,
             }
-        )
 
-        result = await self.agent_runtime.run_agent(
-            agent_definition=agent_def,
-            task=task,
-            context=context,
-            session_id=session_id,
-            manager=manager,
-        )
-
+        # Store result (use lock for thread-safety)
         agent_result = {
             "agent_id": agent_id,
             "role": role,
             "status": result.get("status"),
             "answer": result.get("answer"),
-            "error": result.get("error"),  # Include error details
+            "error": result.get("error"),
+            "traceback": result.get("traceback"),
             "iterations": result.get("iterations"),
             "tools_used": result.get("tools_used", []),
         }
-        agent_results.append(agent_result)
 
-        team_log.append(
-            {
-                "timestamp": datetime.now().isoformat(),
-                "agent_id": agent_id,
-                "event": "completed",
-                "message": f"Completed with status: {result.get('status')}",
-            }
-        )
+        async with self._results_lock:
+            agent_results.append(agent_result)
+
+        # Log completion (use lock for thread-safety)
+        async with self._log_lock:
+            team_log.append(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "agent_id": agent_id,
+                    "event": "completed",
+                    "message": f"Completed with status: {result.get('status')}",
+                }
+            )
 
     def _load_agent_definition(self, agent_id: str) -> Optional[Dict]:
         """Load agent definition from file"""
@@ -551,7 +681,23 @@ class TeamRuntime:
             if relevant_context:
                 task_parts.append("\nPrevious agent outputs:")
                 for key, value in relevant_context.items():
-                    if isinstance(value, str) and len(value) < 500:
+                    if isinstance(value, str):
+                        if len(value) <= 5000:  # Raise limit from 500 to 5000
+                            task_parts.append(f"- {key}: {value}")
+                        else:
+                            # Show truncated preview + warning
+                            preview = value[:500]
+                            task_parts.append(
+                                f"- {key}: {preview}... "
+                                f"[TRUNCATED: {len(value)} total chars, showing first 500. "
+                                f"See full context in shared_context dict]"
+                            )
+                            logger.warning(
+                                f"Context truncated for {key}: {len(value)} chars > 5000. "
+                                f"Consider summarizing large outputs."
+                            )
+                    elif isinstance(value, list):
+                        # Handle tool lists
                         task_parts.append(f"- {key}: {value}")
 
         return "\n".join(task_parts)

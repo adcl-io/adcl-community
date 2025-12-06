@@ -1,3 +1,9 @@
+# Copyright (c) 2025 adcl.io
+# All Rights Reserved.
+#
+# This software is proprietary and confidential. Unauthorized copying,
+# distribution, or use of this software is strictly prohibited.
+
 """
 Upgrade Service - Orchestrates platform upgrades
 
@@ -11,7 +17,7 @@ Following ADCL principles:
 import json
 import logging
 import os
-import re
+import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -75,7 +81,6 @@ class UpgradeService:
 
         # Check disk space (require at least 1GB free)
         try:
-            import shutil
             stat = shutil.disk_usage("/")
             free_gb = stat.free / (1024 ** 3)
             checks["disk_space_ok"] = free_gb >= 1.0
@@ -129,11 +134,8 @@ class UpgradeService:
                 if src.exists():
                     dest = backup_path / src.name
                     if src.is_file():
-                        import shutil
                         shutil.copy2(src, dest)
                     else:
-                        # Use shutil.copytree instead of subprocess for security
-                        import shutil
                         shutil.copytree(src, dest, dirs_exist_ok=True)
                     backed_up.append(str(src))
 
@@ -195,40 +197,87 @@ class UpgradeService:
                 "issues": prereq_check["issues"]
             }
 
-        if progress_callback:
-            await progress_callback({
-                "stage": "backup",
-                "message": "Creating backup..."
-            })
+        # Check if this is community edition
+        edition = os.getenv("ADCL_EDITION", "community")
 
-        # Create backup
-        backup_result = await self.create_backup()
-        if backup_result["status"] != "success":
+        if edition == "community":
+            # Community edition: execute automated upgrade
+            if progress_callback:
+                await progress_callback({
+                    "stage": "upgrade",
+                    "message": "Starting automated upgrade..."
+                })
+
+            try:
+                # Execute community upgrade script in background
+                # The script will restart containers including this one,
+                # so we start it and return immediately
+                script_path = Path("/app/scripts/community-upgrade.sh").resolve()
+
+                # Security: validate script path to prevent command injection
+                if not str(script_path).startswith("/app/scripts/"):
+                    raise ValueError("Invalid script path - must be under /app/scripts/")
+
+                if not script_path.exists():
+                    raise FileNotFoundError(f"Upgrade script not found at {script_path}")
+
+                # Open log file for upgrade output
+                log_file = Path("/app/workspace/logs/upgrade.log")
+                log_file.parent.mkdir(parents=True, exist_ok=True)
+
+                # Start upgrade in background (will survive API response)
+                # Write output to log file instead of PIPE to prevent buffer blocking
+                with open(log_file, 'a') as f:
+                    subprocess.Popen(
+                        [str(script_path)],
+                        stdout=f,
+                        stderr=subprocess.STDOUT,
+                        cwd="/",
+                        start_new_session=True  # Detach from parent process
+                    )
+
+                self._log("Community upgrade started in background")
+                self._log(f"Upgrade logs: {log_file}")
+
+                return {
+                    "status": "success",
+                    "message": "Upgrade started. Platform will restart automatically in ~30 seconds.",
+                    "note": "This page will automatically reload when the upgrade completes."
+                }
+
+            except Exception as e:
+                self._log(f"Community upgrade error: {str(e)}", level="ERROR")
+                return {
+                    "status": "error",
+                    "error": f"Failed to start upgrade: {str(e)}"
+                }
+
+        else:
+            # Dev/Enterprise edition: create backup and return manual steps
+            if progress_callback:
+                await progress_callback({
+                    "stage": "backup",
+                    "message": "Creating backup..."
+                })
+
+            backup_result = await self.create_backup()
+            if backup_result["status"] != "success":
+                return {
+                    "status": "error",
+                    "error": "Backup failed",
+                    "details": backup_result
+                }
+
             return {
-                "status": "error",
-                "error": "Backup failed",
-                "details": backup_result
+                "status": "ready",
+                "message": "Backup created. Ready to execute upgrade script.",
+                "backup_path": backup_result["backup_path"],
+                "next_steps": [
+                    "Stop the platform: docker-compose down",
+                    f"Run upgrade script: ./scripts/upgrade.sh {target_version}",
+                    "Start the platform: docker-compose up -d"
+                ]
             }
-
-        if progress_callback:
-            await progress_callback({
-                "stage": "upgrade",
-                "message": f"Upgrading to version {target_version}...",
-                "backup_path": backup_result["backup_path"]
-            })
-
-        # The actual upgrade would be handled by upgrade.sh script
-        # For now, return success with instructions
-        return {
-            "status": "ready",
-            "message": "Backup created. Ready to execute upgrade script.",
-            "backup_path": backup_result["backup_path"],
-            "next_steps": [
-                "Stop the platform: docker-compose down",
-                f"Run upgrade script: ./scripts/upgrade.sh {target_version}",
-                "Start the platform: docker-compose up -d"
-            ]
-        }
 
     async def rollback(self, backup_path: str) -> Dict[str, Any]:
         """
@@ -261,7 +310,6 @@ class UpgradeService:
                 manifest = json.load(f)
 
             # Restore backed up files
-            import shutil
             restored = []
             for backed_up_path in manifest.get("backed_up", []):
                 src_name = Path(backed_up_path).name
@@ -356,4 +404,4 @@ class UpgradeService:
             with open(self.upgrade_log, 'a') as f:
                 f.write(log_entry)
         except Exception as e:
-            print(f"Failed to write to upgrade log: {e}")
+            logger.error(f"Failed to write to upgrade log: {e}")

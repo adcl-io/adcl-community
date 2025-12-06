@@ -1,3 +1,9 @@
+# Copyright (c) 2025 adcl.io
+# All Rights Reserved.
+#
+# This software is proprietary and confidential. Unauthorized copying,
+# distribution, or use of this software is strictly prohibited.
+
 """
 Version Service - Manages platform version checking and comparison
 
@@ -71,20 +77,20 @@ class VersionService:
         # Determine update URL based on edition
         if not update_url:
             if edition == "community":
-                # Use CloudFront CDN for community edition
+                # Use GitHub releases API for community edition
                 update_url = os.getenv(
                     "COMMUNITY_UPDATE_URL",
-                    "https://ai-releases.com/adcl-releases/releases/latest.json"
+                    "https://api.github.com/repos/adcl-io/adcl-community/releases/latest"
                 )
             elif edition == "enterprise":
                 # Use private registry for enterprise edition
                 registry_url = os.getenv("REGISTRY_URL", "http://registry:9000")
                 update_url = f"{registry_url}/platform/releases/latest"
             else:
-                # Fallback to community CDN
+                # Fallback to GitHub releases API
                 update_url = os.getenv(
                     "COMMUNITY_UPDATE_URL",
-                    "https://ai-releases.com/adcl-releases/releases/latest.json"
+                    "https://api.github.com/repos/adcl-io/adcl-community/releases/latest"
                 )
 
         try:
@@ -188,5 +194,5 @@ class VersionService:
                 json.dump(new_version_data, f, indent=2)
             return True
         except Exception as e:
-            print(f"Failed to update VERSION file: {e}")
+            logger.error(f"Failed to update VERSION file: {e}")
             return False

@@ -13,8 +13,6 @@ ADCL is a modular platform for orchestrating AI agents with specialized capabili
 ```bash
 mkdir adcl && cd adcl
 curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/install.sh | bash
-vi .env and add your API keys for claude and openai
-./clean-restart.sh 
 ```
 
 Access the UI at: **http://localhost:3000**
@@ -115,10 +113,31 @@ The orchestrator exposes a REST API at http://localhost:8000
 ./start.sh                         # Start all services
 ./stop.sh                          # Stop all services
 ./clean-restart.sh                 # Clean restart
+./scripts/community-upgrade.sh     # Upgrade to latest version
 docker compose ps                  # Check status
 docker compose logs -f             # View all logs
 docker compose logs -f orchestrator  # View specific service
 ```
+
+### Upgrading
+
+**From the UI:**
+1. Click the version number in the bottom-left navigation
+2. Click "Check for Updates"
+3. If an update is available, click "Upgrade"
+4. The platform will automatically restart with the new version
+
+**From the CLI:**
+```bash
+./scripts/community-upgrade.sh
+```
+
+This script:
+- Creates a backup of your configuration
+- Pulls the latest Docker images
+- Restarts all services with new images
+- Performs health checks
+- Automatically rolls back on failure
 
 ## Troubleshooting
 

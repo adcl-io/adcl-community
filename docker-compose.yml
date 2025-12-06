@@ -23,7 +23,15 @@ services:
       - ./workflows:/app/workflows
       - ./mcp_servers:/app/mcp_servers:ro
       - ./registry:/app/registry:ro
+      - ./scripts:/app/scripts:ro
+      - ./docker-compose.yml:/docker-compose.yml:ro
+      # SECURITY WARNING: Docker socket access grants full control over host Docker daemon
+      # Required for: MCP container management, platform upgrades
+      # Risk: Code execution in this container = host container access
+      # Mitigation: Keep orchestrator code secure, review all MCP servers carefully
       - /var/run/docker.sock:/var/run/docker.sock
+    # SECURITY WARNING: Running as root for Docker socket access
+    # This is a privileged configuration - ensure orchestrator code is trusted
     user: root
     extra_hosts:
       - "host.docker.internal:host-gateway"

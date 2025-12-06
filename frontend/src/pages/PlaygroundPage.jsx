@@ -418,21 +418,18 @@ export default function PlaygroundPage() {
             }
           }
 
-          // Add full thinking if available, otherwise use preview
-          if (data.thinking && typeof data.thinking === 'string') {
-            statusContent += `\n\n💭 ${data.thinking}`;
-          } else if (data.thinking_preview && typeof data.thinking_preview === 'string') {
-            const preview = data.thinking_preview.length > THINKING_PREVIEW_MAX_LENGTH
-              ? data.thinking_preview.substring(0, THINKING_PREVIEW_MAX_LENGTH) + '...'
-              : data.thinking_preview;
-            statusContent += `\n\n💭 ${preview}`;
-          }
+          // Don't include thinking in status content - will be shown separately in collapsible
 
           // Persist iterations with tool usage or thinking (valuable context)
           const shouldPersist = (data.tools_used && data.tools_used.length > 0) || data.thinking;
-          await addAgentStatusMessage(statusContent, { ...iterationData, thinking: data.thinking, persist: shouldPersist });
+          await addAgentStatusMessage(statusContent, {
+            ...iterationData,
+            thinking: data.thinking,  // Store thinking in metadata, not content
+            thinking_preview: data.thinking_preview,
+            persist: shouldPersist
+          });
         } else if (data.type === 'tool_execution') {
-          // Real-time update for individual tool calls
+          // Real-time update for individual tool calls - don't persist, too verbose
           const agentName = currentAgent?.role || 'Agent';
           const toolMessage = `${agentName} is executing:\n🔧 ${data.tool_summary}`;
           await addAgentStatusMessage(toolMessage, {
@@ -440,7 +437,7 @@ export default function PlaygroundPage() {
             tool_name: data.tool_name,
             tool_summary: data.tool_summary,
             iteration: data.iteration,
-            persist: true  // Persist tool executions - users want to see what tools were used
+            persist: false  // Don't persist - too verbose, tools shown in iteration metadata
           });
         } else if (data.type === 'agent_complete') {
           agentActivityLog.push({
@@ -758,13 +755,20 @@ export default function PlaygroundPage() {
               </div>
             )}
 
-            {messages.map(message => {
+            {messages.map((message) => {
               const agentColor = message.role === 'agent-status' && message.metadata?.agent_color
                 ? getAgentColorClasses(message.metadata.agent_color)
                 : getAgentColorClasses('blue');
 
+              // Make intermediate status messages more compact
+              // Explicit null check on metadata to handle legacy messages from history
+              const isIntermediateStatus = message.role === 'agent-status' &&
+                message.metadata &&
+                message.metadata.persist !== true &&
+                (message.metadata.type === 'agent_iteration' || message.metadata.type === 'tool_execution');
+
               return (
-              <div key={message.id} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={message.id} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} ${isIntermediateStatus ? 'opacity-80' : ''}`}>
                 {message.role !== 'user' && (
                   <div className="flex-shrink-0">
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
@@ -788,7 +792,7 @@ export default function PlaygroundPage() {
 
                 <div className={`flex-1 max-w-2xl ${message.role === 'user' ? 'flex justify-end' : ''}`}>
                   <div
-                    className={`rounded-2xl px-4 py-3 border ${
+                    className={`${isIntermediateStatus ? 'rounded-lg px-3 py-1.5' : 'rounded-2xl px-4 py-3'} border ${
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : message.role === 'error'
@@ -798,39 +802,67 @@ export default function PlaygroundPage() {
                         : 'bg-muted border-transparent'
                     }`}
                   >
-                    <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                    <div className={`whitespace-pre-wrap ${isIntermediateStatus ? 'text-xs' : 'text-sm'}`}>{message.content}</div>
 
-                    {/* Inline technical metrics - always visible for developer users */}
-                    {message.role === 'agent-status' && message.metadata && (
-                      <div className="mt-2 pt-2 border-t border-current/10">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-muted-foreground/70">
-                          {message.metadata?.model && (
-                            <span>Model: {message.metadata.model}</span>
-                          )}
-                          {message.metadata?.token_usage && (
-                            <span>
-                              Tokens: {message.metadata.token_usage.input_tokens?.toLocaleString() || 0} in / {message.metadata.token_usage.output_tokens?.toLocaleString() || 0} out
-                            </span>
-                          )}
-                          {message.metadata?.execution_time && (
-                            <span>Time: {message.metadata.execution_time}s</span>
-                          )}
-                          {message.metadata?.iteration && (
-                            <span>{message.metadata.iteration}/{message.metadata.max_iterations} iterations</span>
-                          )}
-                          {message.metadata?.tools_used && Array.isArray(message.metadata.tools_used) && message.metadata.tools_used.length > 0 && (
-                            <span className="flex items-center gap-1">
-                              <span className="opacity-50">|</span>
-                              MCP: {[...new Set(
-                                message.metadata.tools_used
-                                  .filter(t => t && t.name)
-                                  .map(t => parseMCPServerName(t.name))
-                                  .filter(Boolean)
-                              )].join(', ')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                    {/* Only show details for important messages, not intermediate status */}
+                    {!isIntermediateStatus && (
+                      <>
+                        {/* Thinking content - collapsed by default */}
+                        {message.role === 'agent-status' && message.metadata?.thinking && (
+                          <Collapsible className="mt-2">
+                            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-muted-foreground pt-2 border-t border-current/10 w-full">
+                              <ChevronDown className="h-3 w-3" />
+                              <span>💭 View reasoning</span>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="mt-2 text-xs text-muted-foreground/80 whitespace-pre-wrap font-mono">
+                                {message.metadata.thinking}
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        )}
+
+                        {/* Inline technical metrics - collapsed by default for cleaner UI */}
+                        {message.role === 'agent-status' && message.metadata && (message.metadata.model || message.metadata.token_usage || message.metadata.tools_used) && (
+                          <Collapsible className="mt-2">
+                            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-muted-foreground pt-2 border-t border-current/10 w-full">
+                              <ChevronDown className="h-3 w-3" />
+                              <span>Technical details</span>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="mt-2">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-muted-foreground/70">
+                                  {message.metadata?.model && (
+                                    <span>Model: {message.metadata.model}</span>
+                                  )}
+                                  {message.metadata?.token_usage && (
+                                    <span>
+                                      Tokens: {message.metadata.token_usage.input_tokens?.toLocaleString() || 0} in / {message.metadata.token_usage.output_tokens?.toLocaleString() || 0} out
+                                    </span>
+                                  )}
+                                  {message.metadata?.execution_time && (
+                                    <span>Time: {message.metadata.execution_time}s</span>
+                                  )}
+                                  {message.metadata?.iteration && (
+                                    <span>{message.metadata.iteration}/{message.metadata.max_iterations} iterations</span>
+                                  )}
+                                  {message.metadata?.tools_used && Array.isArray(message.metadata.tools_used) && message.metadata.tools_used.length > 0 && (
+                                    <span className="flex items-center gap-1">
+                                      <span className="opacity-50">|</span>
+                                      MCP: {[...new Set(
+                                        message.metadata.tools_used
+                                          .filter(t => t && t.name)
+                                          .map(t => parseMCPServerName(t.name))
+                                          .filter(Boolean)
+                                      )].join(', ')}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        )}
+                      </>
                     )}
 
                     {message.agentActivity && message.agentActivity.length > 0 && (

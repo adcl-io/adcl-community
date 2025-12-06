@@ -342,10 +342,6 @@ main() {
             if [ $# -lt 2 ]; then
                 error "Backup name required for rollback"
             fi
-            # Validate backup name format to prevent path traversal
-            if [[ ! "$2" =~ ^backup_[0-9]{8}_[0-9]{6}$ ]]; then
-                error "Invalid backup name format. Expected: backup_YYYYMMDD_HHMMSS"
-            fi
             rollback "${BACKUP_DIR}/$2"
             ;;
         *)
