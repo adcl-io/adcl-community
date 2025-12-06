@@ -17,6 +17,7 @@ services:
       - ./workspace:/app/workspace
       - ./logs:/app/logs
       - ./configs:/configs:ro
+      - ./registries.conf:/app/registries.conf:ro
       - ./agent-definitions:/app/agent-definitions
       - ./agent-teams:/app/agent-teams
       - ./workflows:/app/workflows

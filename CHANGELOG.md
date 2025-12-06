@@ -1,3 +1,9 @@
+## [0.1.23] - 2025-12-05
+
+### Changes
+- Copy registries.conf to public repo
+- Add registries.conf volume mount to orchestrator
+
 ## [0.1.22] - 2025-12-05
 
 ### Changes
