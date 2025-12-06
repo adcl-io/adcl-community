@@ -13,6 +13,8 @@ ADCL is a modular platform for orchestrating AI agents with specialized capabili
 ```bash
 mkdir adcl && cd adcl
 curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/install.sh | bash
+vi .env and add your API keys for claude and openai
+./clean-restart.sh 
 ```
 
 Access the UI at: **http://localhost:3000**
