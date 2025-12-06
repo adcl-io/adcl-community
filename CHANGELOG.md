@@ -1,3 +1,8 @@
+## [0.1.21] - 2025-12-05
+
+### Changes
+- Complete .env.example based on DEV environment
+
 ## [0.1.20] - 2025-12-05
 
 ### Changes
