@@ -142,6 +142,8 @@ class ModelService:
         """
         Save model configurations to YAML config file.
 
+        NOTE: This method does NOT acquire the lock. Caller must hold the lock.
+
         Args:
             models: List of model configurations
 
@@ -151,50 +153,49 @@ class ModelService:
         Raises:
             ValidationError: If save fails
         """
-        async with self.lock:
-            try:
-                # Load existing config to preserve other sections
-                existing_config = {}
-                if self.models_config_path.exists():
-                    with open(self.models_config_path, "r") as f:
-                        existing_config = yaml.safe_load(f) or {}
+        try:
+            # Load existing config to preserve other sections
+            existing_config = {}
+            if self.models_config_path.exists():
+                with open(self.models_config_path, "r") as f:
+                    existing_config = yaml.safe_load(f) or {}
 
-                # Update models section
-                config_models = []
-                for model in models:
-                    # Determine api_key_env based on provider
-                    if model["provider"] == "anthropic":
-                        api_key_env = "ANTHROPIC_API_KEY"
-                    elif model["provider"] == "openai":
-                        api_key_env = "OPENAI_API_KEY"
-                    else:
-                        api_key_env = f"{model['provider'].upper()}_API_KEY"
+            # Update models section
+            config_models = []
+            for model in models:
+                # Determine api_key_env based on provider
+                if model["provider"] == "anthropic":
+                    api_key_env = "ANTHROPIC_API_KEY"
+                elif model["provider"] == "openai":
+                    api_key_env = "OPENAI_API_KEY"
+                else:
+                    api_key_env = f"{model['provider'].upper()}_API_KEY"
 
-                    config_model = {
-                        "id": model["id"],
-                        "name": model["name"],
-                        "provider": model["provider"],
-                        "model_id": model["model_id"],
-                        "temperature": model.get("temperature", 0.7),
-                        "max_tokens": model.get("max_tokens", 4096),
-                        "description": model.get("description", ""),
-                        "is_default": model.get("is_default", False),
-                        "api_key_env": api_key_env,
-                    }
-                    config_models.append(config_model)
+                config_model = {
+                    "id": model["id"],
+                    "name": model["name"],
+                    "provider": model["provider"],
+                    "model_id": model["model_id"],
+                    "temperature": model.get("temperature", 0.7),
+                    "max_tokens": model.get("max_tokens", 4096),
+                    "description": model.get("description", ""),
+                    "is_default": model.get("is_default", False),
+                    "api_key_env": api_key_env,
+                }
+                config_models.append(config_model)
 
-                existing_config["models"] = config_models
+            existing_config["models"] = config_models
 
-                # Write back to file
-                with open(self.models_config_path, "w") as f:
-                    yaml.safe_dump(existing_config, f, default_flow_style=False, sort_keys=False)
+            # Write back to file
+            with open(self.models_config_path, "w") as f:
+                yaml.safe_dump(existing_config, f, default_flow_style=False, sort_keys=False)
 
-                logger.info(f"Saved {len(models)} models to config")
-                return True
+            logger.info(f"Saved {len(models)} models to config")
+            return True
 
-            except Exception as e:
-                logger.error(f"Failed to save models to config: {e}")
-                raise ValidationError(f"Failed to save models: {e}", field="config")
+        except Exception as e:
+            logger.error(f"Failed to save models to config: {e}")
+            raise ValidationError(f"Failed to save models: {e}", field="config")
 
     async def list_models(self) -> List[Dict[str, Any]]:
         """
@@ -223,6 +224,10 @@ class ModelService:
         Raises:
             NotFoundError: If model not found
         """
+        # Lazy load - use list_models which handles locking
+        if not self.models:
+            await self.load_from_config()
+
         async with self.lock:
             for model in self.models:
                 if model["id"] == model_id:
@@ -244,6 +249,10 @@ class ModelService:
             ValidationError: If model data invalid
             ConflictError: If model ID already exists
         """
+        # Lazy load models before acquiring lock
+        if not self.models:
+            await self.load_from_config()
+
         async with self.lock:
             # Generate slug from provider and model_id
             slug = f"{model_data['provider']}-{model_data['model_id']}".replace("/", "-").replace("_", "-").lower()
@@ -288,6 +297,10 @@ class ModelService:
         Raises:
             NotFoundError: If model not found
         """
+        # Lazy load models before acquiring lock
+        if not self.models:
+            await self.load_from_config()
+
         async with self.lock:
             for i, m in enumerate(self.models):
                 if m["id"] == model_id:
@@ -325,6 +338,10 @@ class ModelService:
             NotFoundError: If model not found
             ValidationError: If trying to delete last model or default model
         """
+        # Lazy load models before acquiring lock
+        if not self.models:
+            await self.load_from_config()
+
         async with self.lock:
             # Don't allow deleting the last model
             if len(self.models) == 1:
@@ -366,6 +383,10 @@ class ModelService:
             NotFoundError: If model not found
             ValidationError: If model is not configured
         """
+        # Lazy load models before acquiring lock
+        if not self.models:
+            await self.load_from_config()
+
         async with self.lock:
             # Find target model
             target_model = None

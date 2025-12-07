@@ -4,9 +4,9 @@ models:
   provider: anthropic
   model_id: claude-sonnet-4-5-20250929
   temperature: 0.7
-  max_tokens: 8192
+  max_tokens: 8193
   description: Most intelligent model - best for complex tasks
-  is_default: false
+  is_default: true
   api_key_env: ANTHROPIC_API_KEY
 - id: claude-sonnet-4
   name: Claude Sonnet 4
@@ -33,7 +33,7 @@ models:
   temperature: 0.7
   max_tokens: 4096
   description: Latest GPT-4 with improved capabilities
-  is_default: true
+  is_default: false
   api_key_env: OPENAI_API_KEY
 - id: gpt-4
   name: GPT-4

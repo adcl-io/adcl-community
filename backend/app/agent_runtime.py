@@ -513,7 +513,23 @@ class AgentRuntime:
                     tool_calls = []
 
                     for block in content:
-                        if hasattr(block, 'text'):
+                        # Handle both object and dict formats
+                        if isinstance(block, dict):
+                            if block.get('type') == 'text':
+                                text_parts.append(block.get('text', ''))
+                            elif block.get('type') == 'tool_use':
+                                # Convert double underscore to hyphen for OpenAI compatibility
+                                openai_name = block['name'].replace("__", "-")
+
+                                tool_calls.append({
+                                    "id": block['id'],
+                                    "type": "function",
+                                    "function": {
+                                        "name": openai_name,
+                                        "arguments": json.dumps(block['input'])
+                                    }
+                                })
+                        elif hasattr(block, 'text'):
                             text_parts.append(block.text)
                         elif hasattr(block, 'type') and block.type == 'tool_use':
                             # Convert double underscore to hyphen for OpenAI compatibility

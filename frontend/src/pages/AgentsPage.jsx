@@ -31,6 +31,32 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+const DEFAULT_MAX_ITERATIONS = 10;
+const DEFAULT_TEMPERATURE = 0.7;
+const DEFAULT_MAX_TOKENS = 4096;
+
+// Model-specific max completion token limits
+const MODEL_TOKEN_LIMITS = {
+  // OpenAI models
+  'gpt-4': 4096,
+  'gpt-4-turbo': 4096,
+  'gpt-4-turbo-preview': 4096,
+  'gpt-3.5-turbo': 4096,
+
+  // Anthropic models
+  'claude-sonnet-4-5-20250929': 8192,
+  'claude-sonnet-4-20250514': 8192,
+  'claude-opus-4-20250514': 8192,
+
+  // Default fallback
+  'default': 4096
+};
+
+// Get the max tokens limit for a specific model
+const getModelTokenLimit = (modelId) => {
+  return MODEL_TOKEN_LIMITS[modelId] || MODEL_TOKEN_LIMITS['default'];
+};
+
 function AgentsPage() {
   const [agents, setAgents] = useState([]);
   const [selectedAgent, setSelectedAgent] = useState(null);
@@ -124,7 +150,7 @@ function AgentsPage() {
 
   const handleEditClick = () => {
     setEditMode(true);
-    setEditedAgent(JSON.parse(JSON.stringify(selectedAgent))); // Deep clone
+    setEditedAgent(structuredClone(selectedAgent)); // Deep clone
     setSaveMessage(null);
   };
 
@@ -197,7 +223,7 @@ function AgentsPage() {
       setAgents([...agents, response.data]);
       setSelectedAgent(response.data);
       setEditMode(true);
-      setEditedAgent(JSON.parse(JSON.stringify(response.data)));
+      setEditedAgent(structuredClone(response.data));
       setSaveMessage({ type: 'success', text: 'New agent created! Edit and save.' });
     } catch (error) {
       console.error('Error creating agent:', error);
@@ -725,8 +751,29 @@ function AgentsPage() {
                                 <Input
                                   id="max_iterations"
                                   type="number"
-                                  value={editedAgent.capabilities?.max_iterations || 10}
-                                  onChange={(e) => updateEditedField('capabilities.max_iterations', parseInt(e.target.value))}
+                                  min="1"
+                                  max="100"
+                                  value={editedAgent.capabilities?.max_iterations ?? ''}
+                                  onChange={(e) => {
+                                    const rawValue = e.target.value;
+                                    if (rawValue === '') {
+                                      updateEditedField('capabilities.max_iterations', '');
+                                      return;
+                                    }
+                                    const value = parseInt(rawValue, 10);
+                                    if (!isNaN(value)) {
+                                      updateEditedField('capabilities.max_iterations', value);
+                                    }
+                                  }}
+                                  onBlur={() => {
+                                    const currentValue = editedAgent.capabilities?.max_iterations;
+                                    if (currentValue === '' || isNaN(currentValue)) {
+                                      updateEditedField('capabilities.max_iterations', DEFAULT_MAX_ITERATIONS);
+                                    } else {
+                                      const clamped = Math.min(100, Math.max(1, currentValue));
+                                      updateEditedField('capabilities.max_iterations', clamped);
+                                    }
+                                  }}
                                 />
                               </div>
 
@@ -803,18 +850,67 @@ function AgentsPage() {
                                     step="0.1"
                                     min="0"
                                     max="1"
-                                    value={editedAgent.model_config?.temperature || 0.7}
-                                    onChange={(e) => updateEditedField('model_config.temperature', parseFloat(e.target.value))}
+                                    value={editedAgent.model_config?.temperature ?? ''}
+                                    onChange={(e) => {
+                                      const rawValue = e.target.value;
+                                      if (rawValue === '') {
+                                        updateEditedField('model_config.temperature', '');
+                                        return;
+                                      }
+                                      const value = parseFloat(rawValue);
+                                      if (!isNaN(value)) {
+                                        updateEditedField('model_config.temperature', value);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      const currentValue = editedAgent.model_config?.temperature;
+                                      if (currentValue === '' || isNaN(currentValue)) {
+                                        updateEditedField('model_config.temperature', DEFAULT_TEMPERATURE);
+                                      } else {
+                                        const clamped = Math.min(1, Math.max(0, currentValue));
+                                        updateEditedField('model_config.temperature', clamped);
+                                      }
+                                    }}
                                   />
                                 </div>
                                 <div className="space-y-2">
-                                  <Label htmlFor="max_tokens">Max Tokens</Label>
+                                  <Label htmlFor="max_tokens">
+                                    Max Tokens
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      (Max: {getModelTokenLimit(editedAgent.model_config?.model).toLocaleString()} for this model)
+                                    </span>
+                                  </Label>
                                   <Input
                                     id="max_tokens"
                                     type="number"
-                                    value={editedAgent.model_config?.max_tokens || 4096}
-                                    onChange={(e) => updateEditedField('model_config.max_tokens', parseInt(e.target.value))}
+                                    min="1"
+                                    max={getModelTokenLimit(editedAgent.model_config?.model)}
+                                    value={editedAgent.model_config?.max_tokens ?? ''}
+                                    onChange={(e) => {
+                                      const rawValue = e.target.value;
+                                      if (rawValue === '') {
+                                        updateEditedField('model_config.max_tokens', '');
+                                        return;
+                                      }
+                                      const value = parseInt(rawValue, 10);
+                                      if (!isNaN(value)) {
+                                        updateEditedField('model_config.max_tokens', value);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      const currentValue = editedAgent.model_config?.max_tokens;
+                                      const modelLimit = getModelTokenLimit(editedAgent.model_config?.model);
+                                      if (currentValue === '' || isNaN(currentValue)) {
+                                        updateEditedField('model_config.max_tokens', DEFAULT_MAX_TOKENS);
+                                      } else {
+                                        const clamped = Math.min(modelLimit, Math.max(1, currentValue));
+                                        updateEditedField('model_config.max_tokens', clamped);
+                                      }
+                                    }}
                                   />
+                                  <p className="text-xs text-muted-foreground">
+                                    Maximum completion tokens (not context window)
+                                  </p>
                                 </div>
                               </div>
                             </div>

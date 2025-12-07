@@ -31,6 +31,31 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+const DEFAULT_TEMPERATURE = 0.7;
+const DEFAULT_MAX_TOKENS = 4096;
+
+// Model-specific max completion token limits
+const MODEL_TOKEN_LIMITS = {
+  // OpenAI models
+  'gpt-4': 4096,
+  'gpt-4-turbo': 4096,
+  'gpt-4-turbo-preview': 4096,
+  'gpt-3.5-turbo': 4096,
+
+  // Anthropic models
+  'claude-sonnet-4-5-20250929': 8192,
+  'claude-sonnet-4-20250514': 8192,
+  'claude-opus-4-20250514': 8192,
+
+  // Default fallback
+  'default': 4096
+};
+
+// Get the max tokens limit for a specific model
+const getModelTokenLimit = (modelId) => {
+  return MODEL_TOKEN_LIMITS[modelId] || MODEL_TOKEN_LIMITS['default'];
+};
+
 export default function ModelsPage() {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,8 +66,8 @@ export default function ModelsPage() {
     provider: 'anthropic',
     model_id: 'claude-sonnet-4-5-20250929',
     api_key: '',
-    temperature: 0.7,
-    max_tokens: 4096,
+    temperature: DEFAULT_TEMPERATURE,
+    max_tokens: DEFAULT_MAX_TOKENS,
     description: ''
   });
 
@@ -87,11 +112,23 @@ export default function ModelsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate form data before submission
+    const validatedData = {
+      ...formData,
+      temperature: typeof formData.temperature === 'number' && !isNaN(formData.temperature)
+        ? formData.temperature
+        : DEFAULT_TEMPERATURE,
+      max_tokens: typeof formData.max_tokens === 'number' && !isNaN(formData.max_tokens)
+        ? formData.max_tokens
+        : DEFAULT_MAX_TOKENS
+    };
+
     try {
       if (editingModel) {
-        await axios.put(`${API_URL}/models/${editingModel.id}`, formData);
+        await axios.put(`${API_URL}/models/${editingModel.id}`, validatedData);
       } else {
-        await axios.post(`${API_URL}/models`, formData);
+        await axios.post(`${API_URL}/models`, validatedData);
       }
       loadModels();
       resetForm();
@@ -129,8 +166,8 @@ export default function ModelsPage() {
       provider: 'anthropic',
       model_id: 'claude-sonnet-4-5-20250929',
       api_key: '',
-      temperature: 0.7,
-      max_tokens: 4096,
+      temperature: DEFAULT_TEMPERATURE,
+      max_tokens: DEFAULT_MAX_TOKENS,
       description: ''
     });
     setEditingModel(null);
@@ -271,7 +308,7 @@ export default function ModelsPage() {
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="font-semibold text-foreground">Max Tokens:</span>
-                        <span className="text-muted-foreground">{model.max_tokens.toLocaleString()}</span>
+                        <span className="text-muted-foreground">{(model.max_tokens || 0).toLocaleString()}</span>
                       </div>
                     </div>
 
@@ -386,20 +423,67 @@ export default function ModelsPage() {
                     max="1"
                     step="0.1"
                     value={formData.temperature}
-                    onChange={(e) => setFormData({ ...formData, temperature: parseFloat(e.target.value) })}
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      if (rawValue === '') {
+                        setFormData({ ...formData, temperature: '' });
+                        return;
+                      }
+                      const value = parseFloat(rawValue);
+                      if (!isNaN(value)) {
+                        setFormData({ ...formData, temperature: value });
+                      }
+                    }}
+                    onBlur={() => {
+                      const value = formData.temperature;
+                      if (value === '' || isNaN(value)) {
+                        setFormData({ ...formData, temperature: DEFAULT_TEMPERATURE });
+                      } else {
+                        const clamped = Math.min(1, Math.max(0, value));
+                        setFormData({ ...formData, temperature: clamped });
+                      }
+                    }}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="max_tokens">Max Tokens</Label>
+                  <Label htmlFor="max_tokens">
+                    Max Tokens
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (Max: {getModelTokenLimit(formData.model_id).toLocaleString()} for this model)
+                    </span>
+                  </Label>
                   <Input
                     id="max_tokens"
                     type="number"
                     min="1"
-                    max="100000"
+                    max={getModelTokenLimit(formData.model_id)}
                     value={formData.max_tokens}
-                    onChange={(e) => setFormData({ ...formData, max_tokens: parseInt(e.target.value) })}
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      if (rawValue === '') {
+                        setFormData({ ...formData, max_tokens: '' });
+                        return;
+                      }
+                      const value = parseInt(rawValue, 10);
+                      if (!isNaN(value)) {
+                        setFormData({ ...formData, max_tokens: value });
+                      }
+                    }}
+                    onBlur={() => {
+                      const value = formData.max_tokens;
+                      const modelLimit = getModelTokenLimit(formData.model_id);
+                      if (value === '' || isNaN(value)) {
+                        setFormData({ ...formData, max_tokens: DEFAULT_MAX_TOKENS });
+                      } else {
+                        const clamped = Math.min(modelLimit, Math.max(1, value));
+                        setFormData({ ...formData, max_tokens: clamped });
+                      }
+                    }}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Maximum completion tokens this model can generate (not context window)
+                  </p>
                 </div>
               </div>
 
