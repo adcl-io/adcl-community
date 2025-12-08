@@ -24,23 +24,23 @@ if [ ! -f "docker-compose.yml" ]; then
     exit 1
 fi
 
-echo "🛑 Stopping and removing all services..."
+echo "🛑 Stopping all services..."
 
-# Remove ALL adcl-* containers
-echo "  └─ Removing all ADCL containers..."
-docker ps -a --filter "name=adcl-" --format "{{.Names}}" | xargs -r docker rm -f 2>/dev/null || true
-
-# Remove dynamic MCP containers
-echo "  └─ Removing dynamic MCP containers..."
-for container in mcp-agent mcp-file-tools mcp-nmap-recon mcp-history; do
-    docker rm -f $container 2>/dev/null || true
+# Stop dynamic MCP containers first
+echo "  └─ Stopping dynamic MCP containers..."
+for container in mcp-agent mcp-file-tools mcp-nmap-recon; do
+    if docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
+        echo "     ├─ Stopping $container..."
+        docker stop $container 2>/dev/null || true
+    fi
 done
 
-# Stop docker-compose services and remove containers
-docker-compose down --remove-orphans
+# Stop docker-compose services
+docker-compose stop
 
 echo ""
-echo "✅ All services stopped and removed"
+echo "✅ All services stopped"
 echo ""
-echo "To start again: ./start.sh or ./clean-restart.sh"
+echo "To remove containers: docker-compose down"
+echo "To start again: ./start.sh"
 echo "To check status: ./status.sh"

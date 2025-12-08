@@ -10,13 +10,6 @@ set -euo pipefail
 # Cleanup Empty Sessions Script
 # Calls the history MCP server to archive empty sessions older than 1 hour
 
-# Check for required dependencies
-if ! command -v jq &> /dev/null; then
-    echo "Error: jq is required but not installed"
-    echo "Install: sudo apt-get install jq  (or brew install jq on macOS)"
-    exit 1
-fi
-
 HISTORY_MCP_URL="${HISTORY_MCP_URL:-http://localhost:7004}"
 MAX_AGE_HOURS="${MAX_AGE_HOURS:-1}"
 

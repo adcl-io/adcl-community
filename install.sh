@@ -47,10 +47,10 @@ for NAME in adcl-orchestrator adcl-frontend adcl-registry; do
 done
 [ -n "$REMOVED" ] && echo "✅ Cleaned up old containers"
 
-# Pull and start
+# Build and start services
 echo ""
-echo "🐳 Pulling images..."
-docker compose pull
+echo "🔨 Building services from source..."
+docker compose build
 
 echo "🚀 Starting services..."
 docker compose up -d

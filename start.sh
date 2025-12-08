@@ -66,15 +66,7 @@ echo "  - MCPs:          Auto-installed from registry on startup"
 echo ""
 
 # Start services in detached mode
-# Check if using GHCR images (community edition) or local build
-if grep -q "ghcr.io" docker-compose.yml 2>/dev/null; then
-    echo "🐳 Using GHCR images (pulling latest)..."
-    docker-compose pull
-    docker-compose up -d
-else
-    echo "🔨 Building and starting services..."
-    docker-compose up -d --build
-fi
+docker-compose up -d --build
 
 echo ""
 echo "✅ Services started successfully!"

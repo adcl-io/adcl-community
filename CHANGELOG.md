@@ -1,6 +1,8 @@
 ## [0.1.25] - 2025-12-07
 
 ### Changes
+- Release v0.1.24
+- Update community install to build from source instead of registry (#49)
 - Fix model editing UI and OpenAI tool calling issues (#48)
 - Improve agent execution UI - compact intermediate steps (#46)
 - Add automated upgrade system for community edition (#45)
@@ -54,9 +56,11 @@
 - mostly clean up in mcp; re-organized to make them truly modular (#13)
 - quick spec writeup based on core arch; (#12)
 
-## [0.1.24] - 2025-12-06
+## [0.1.24] - 2025-12-07
 
 ### Changes
+- Update community install to build from source instead of registry (#49)
+- Fix model editing UI and OpenAI tool calling issues (#48)
 - Improve agent execution UI - compact intermediate steps (#46)
 - Add automated upgrade system for community edition (#45)
 - Review codebase and architecture (#44)
