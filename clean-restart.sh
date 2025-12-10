@@ -18,6 +18,9 @@ fi
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Source docker-compose compatibility helper
+source "$SCRIPT_DIR/scripts/docker-compose-compat.sh"
+
 echo "╔══════════════════════════════════════════════════════╗"
 if [ "$NUKE_MODE" = true ]; then
     echo "║     MCP Agent Platform - NUCLEAR RESTART ☢️          ║"
@@ -50,7 +53,7 @@ for container in mcp-agent mcp-file-tools mcp-nmap-recon mcp-history; do
 done
 
 # Then run docker-compose down
-docker-compose down
+$DOCKER_COMPOSE down
 
 if [ "$NUKE_MODE" = true ]; then
     echo ""
@@ -65,12 +68,12 @@ fi
 echo ""
 if [ "$NUKE_MODE" = true ]; then
     echo "🚀 Starting services with FULL REBUILD (no cache)..."
-    docker-compose build --no-cache
-    docker-compose up -d
+    $DOCKER_COMPOSE build --no-cache
+    $DOCKER_COMPOSE up -d
 else
     echo "🚀 Starting services fresh..."
     # Source code is now bind-mounted, so rebuilds are only needed for dependency changes
-    docker-compose up -d --build
+    $DOCKER_COMPOSE up -d --build
 fi
 
 echo ""
@@ -81,7 +84,7 @@ echo ""
 echo "✅ Clean restart complete!"
 echo ""
 echo "📊 Service Status:"
-docker-compose ps
+$DOCKER_COMPOSE ps
 
 echo ""
 echo "🌐 Service Endpoints:"

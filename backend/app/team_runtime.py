@@ -14,6 +14,7 @@ import json
 import asyncio
 import logging
 from datetime import datetime
+from app.utils.token_counter import get_token_counter
 
 logger = logging.getLogger(__name__)
 
@@ -198,7 +199,7 @@ class TeamRuntime:
 
             # Build agent-specific task with context from previous agents
             agent_task = self._build_agent_task(
-                task, role, agent_config.get("responsibilities", []), shared_context
+                task, role, agent_config.get("responsibilities", []), shared_context, agent_def
             )
 
             team_log.append(
@@ -270,6 +271,8 @@ class TeamRuntime:
                 "iterations": result.get("iterations"),
                 "tools_used": result.get("tools_used", []),
                 "reasoning_steps": result.get("reasoning_steps", []),
+                "token_usage": result.get("token_usage"),  # Include token usage for KPI tracking
+                "cumulative_tokens": result.get("cumulative_tokens"),  # Session totals if available
             }
             agent_results.append(agent_result)
 
@@ -369,6 +372,7 @@ class TeamRuntime:
                 agent_config.get("role", "Agent"),
                 agent_config.get("responsibilities", []),
                 shared_context,
+                agent_def,
             )
 
             # Create async task
@@ -510,6 +514,8 @@ class TeamRuntime:
                     "error": result.get("error"),
                     "traceback": result.get("traceback"),
                     "iterations": result.get("iterations"),
+                    "token_usage": result.get("token_usage"),  # Include token usage for KPI tracking
+                    "cumulative_tokens": result.get("cumulative_tokens"),  # Session totals if available
                 }
                 round_results.append(round_result)
                 agent_results.append(round_result)
@@ -614,6 +620,8 @@ class TeamRuntime:
             "traceback": result.get("traceback"),
             "iterations": result.get("iterations"),
             "tools_used": result.get("tools_used", []),
+            "token_usage": result.get("token_usage"),  # Include token usage for KPI tracking
+            "cumulative_tokens": result.get("cumulative_tokens"),  # Session totals if available
         }
 
         async with self._results_lock:
@@ -663,7 +671,7 @@ class TeamRuntime:
         return agent_def
 
     def _build_agent_task(
-        self, original_task: str, role: str, responsibilities: List[str], context: Dict
+        self, original_task: str, role: str, responsibilities: List[str], context: Dict, agent_def: Dict
     ) -> str:
         """Build agent-specific task based on role and previous context"""
 
@@ -673,32 +681,30 @@ class TeamRuntime:
         if responsibilities:
             task_parts.append(f"Your responsibilities: {', '.join(responsibilities)}")
 
-        # Add context from previous agents (for sequential mode)
+        # Add SUMMARY of context from previous agents (not full outputs)
+        # Use token-based truncation to prevent API rate limits
         if context:
             relevant_context = {
                 k: v for k, v in context.items() if k.startswith("agent_")
             }
             if relevant_context:
-                task_parts.append("\nPrevious agent outputs:")
+                token_counter = get_token_counter()
+                max_preview_tokens = token_counter.get_config_limits()["agent_output_preview_tokens"]
+                model_name = agent_def["model_config"]["model"]
+
+                task_parts.append("\nPrevious agent outputs (summaries):")
                 for key, value in relevant_context.items():
                     if isinstance(value, str):
-                        if len(value) <= 5000:  # Raise limit from 500 to 5000
-                            task_parts.append(f"- {key}: {value}")
-                        else:
-                            # Show truncated preview + warning
-                            preview = value[:500]
-                            task_parts.append(
-                                f"- {key}: {preview}... "
-                                f"[TRUNCATED: {len(value)} total chars, showing first 500. "
-                                f"See full context in shared_context dict]"
-                            )
-                            logger.warning(
-                                f"Context truncated for {key}: {len(value)} chars > 5000. "
-                                f"Consider summarizing large outputs."
-                            )
+                        # Use token-based truncation
+                        preview = token_counter.truncate_to_token_limit(
+                            value,
+                            max_preview_tokens,
+                            model_name
+                        )
+                        task_parts.append(f"- {key}: {preview}")
                     elif isinstance(value, list):
-                        # Handle tool lists
-                        task_parts.append(f"- {key}: {value}")
+                        # Handle tool lists with count
+                        task_parts.append(f"- {key}: {len(value)} tools used")
 
         return "\n".join(task_parts)
 

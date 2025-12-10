@@ -7,6 +7,9 @@ set -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Source docker-compose compatibility helper
+source "$SCRIPT_DIR/scripts/docker-compose-compat.sh"
+
 echo "╔══════════════════════════════════════════════════════╗"
 echo "║     MCP Agent Platform - Phase 1 Demo               ║"
 echo "╚══════════════════════════════════════════════════════╝"
@@ -38,11 +41,11 @@ if [ ! -f .env ]; then
 fi
 
 # Check if services are already running
-RUNNING_CONTAINERS=$(docker-compose ps -q 2>/dev/null | wc -l)
+RUNNING_CONTAINERS=$($DOCKER_COMPOSE ps -q 2>/dev/null | wc -l)
 if [ "$RUNNING_CONTAINERS" -gt 0 ]; then
     echo "⚠️  Some services are already running"
     echo ""
-    docker-compose ps
+    $DOCKER_COMPOSE ps
     echo ""
     echo "To avoid ContainerConfig errors, use one of these options:"
     echo "  1. Clean restart:  ./clean-restart.sh    (recommended)"
@@ -66,14 +69,14 @@ echo "  - MCPs:          Auto-installed from registry on startup"
 echo ""
 
 # Start services in detached mode
-docker-compose up -d --build
+$DOCKER_COMPOSE up -d --build
 
 echo ""
 echo "✅ Services started successfully!"
 echo ""
 echo "📊 Checking status..."
-docker-compose ps
+$DOCKER_COMPOSE ps
 echo ""
-echo "To view logs: docker-compose logs -f [service_name]"
+echo "To view logs: $DOCKER_COMPOSE logs -f [service_name]"
 echo "To stop: ./stop.sh"
 echo "To check status: ./status.sh"

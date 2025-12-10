@@ -15,6 +15,7 @@ import asyncio
 import aiohttp
 from datetime import datetime
 from app.token_tracker import get_token_tracker
+from app.utils.token_counter import get_token_counter
 
 
 class AgentRuntime:
@@ -142,6 +143,33 @@ class AgentRuntime:
                 # Determine which AI provider to use
                 model_name = agent_definition["model_config"]["model"]
                 provider, client = self._get_client_for_model(model_name)
+
+                # Validate request size BEFORE sending to API (fail fast)
+                token_counter = get_token_counter()
+                validation = token_counter.validate_request_size(messages, model_name)
+
+                if not validation["valid"]:
+                    # Pre-emptive failure - don't waste API call
+                    error_msg = (
+                        f"Request too large for model {model_name}:\n"
+                        f"- Tokens in request: {validation['token_count']}\n"
+                        f"- Model limit (with safety margin): {validation['limit']}\n\n"
+                        f"Suggestions:\n"
+                        f"- Reduce agent max_iterations (currently {max_iterations})\n"
+                        f"- Use fewer agents in the team\n"
+                        f"- Switch to a model with higher limits (e.g., gpt-4-turbo: 120K tokens)\n"
+                        f"- Summarize previous outputs before passing to next agent\n"
+                    )
+                    print(f"❌ {error_msg}")
+                    return {
+                        "status": "error",
+                        "error": error_msg,
+                        "iterations": iteration - 1,  # Don't count this iteration
+                        "tools_used": tool_uses,
+                        "reasoning_steps": reasoning_steps,
+                        "token_count": validation['token_count'],
+                        "token_limit": validation['limit'],
+                    }
 
                 # Agent reasons and decides next action
                 if provider == "anthropic":
@@ -317,7 +345,7 @@ class AgentRuntime:
 
                     print(f"\n✅ Agent completed task in {iteration} iterations\n")
 
-                    return {
+                    result = {
                         "status": "completed",
                         "answer": final_text,
                         "iterations": iteration,
@@ -326,7 +354,14 @@ class AgentRuntime:
                         "conversation_history": messages,
                         "agent_id": agent_definition.get("id"),
                         "agent_name": agent_definition.get("name"),
+                        "token_usage": token_usage,  # Token usage for this agent
                     }
+
+                    # Add cumulative tokens if tracking is enabled
+                    if cumulative_tokens:
+                        result["cumulative_tokens"] = cumulative_tokens
+
+                    return result
                 else:
                     # Unexpected stop reason
                     print(f"⚠️  Unexpected stop reason: {response.stop_reason}")
@@ -349,6 +384,19 @@ class AgentRuntime:
                     model_name = agent_definition['model_config']['model']
                     error_details = (
                         f"API key issue for model {model_name}.\n\n"
+                        f"Original error: {error_details}"
+                    )
+                elif "rate_limit" in error_details.lower() or "429" in error_details:
+                    # OpenAI/Anthropic rate limit error
+                    model_name = agent_definition['model_config']['model']
+                    error_details = (
+                        f"Rate limit exceeded for model {model_name}. "
+                        f"This often happens when the input context is too large for your tier.\n\n"
+                        f"Suggestions:\n"
+                        f"- Reduce the number of agents in the team\n"
+                        f"- Limit agent max_iterations to reduce message history\n"
+                        f"- Use a model with higher token limits (e.g., gpt-4-turbo)\n"
+                        f"- Upgrade your API tier for higher rate limits\n\n"
                         f"Original error: {error_details}"
                     )
 
@@ -647,8 +695,27 @@ Think step by step and use tools as needed. When you have completed the task, pr
 comprehensive summary of your findings and work.
 """
 
+        # Add non-agent context only (avoid duplication with task description)
+        # Agent outputs are already summarized in the task string from team_runtime
         if context:
-            prompt += f"\n\nAdditional context:\n{json.dumps(context, indent=2)}\n"
+            # Filter out agent outputs to avoid duplication
+            non_agent_context = {
+                k: v for k, v in context.items()
+                if not k.startswith("agent_") and not k.startswith("round")
+            }
+            if non_agent_context:
+                # Use token-based truncation (not character-based)
+                token_counter = get_token_counter()
+                max_context_tokens = token_counter.get_config_limits()["additional_context_max_tokens"]
+                model_name = agent_def["model_config"]["model"]
+
+                context_str = json.dumps(non_agent_context, indent=2)
+                context_str = token_counter.truncate_to_token_limit(
+                    context_str,
+                    max_context_tokens,
+                    model_name
+                )
+                prompt += f"\n\nAdditional context:\n{context_str}\n"
 
         return prompt
 

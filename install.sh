@@ -6,6 +6,17 @@
 
 set -e
 
+# Detect docker compose command (inline detection for standalone installer)
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+else
+    echo "❌ Error: Neither 'docker-compose' nor 'docker compose' is available"
+    echo "   Please install Docker Compose first"
+    exit 1
+fi
+
 echo "🚀 Installing ADCL Community Edition..."
 echo ""
 
@@ -50,10 +61,10 @@ done
 # Build and start services
 echo ""
 echo "🔨 Building services from source..."
-docker compose build
+$DOCKER_COMPOSE build
 
 echo "🚀 Starting services..."
-docker compose up -d
+$DOCKER_COMPOSE up -d
 
 echo ""
 echo "✅ ADCL Community Edition installed in $(pwd)!"
@@ -66,9 +77,9 @@ echo "Next steps:"
 echo "  cd $INSTALL_DIR"
 echo ""
 echo "Then run:"
-echo "  docker compose ps          # Check status"
-echo "  docker compose logs -f     # View logs"
-echo "  ./stop.sh                  # Stop all"
-echo "  ./start.sh                 # Start all"
-echo "  ./clean-restart.sh         # Clean restart"
+echo "  $DOCKER_COMPOSE ps          # Check status"
+echo "  $DOCKER_COMPOSE logs -f     # View logs"
+echo "  ./stop.sh                    # Stop all"
+echo "  ./start.sh                   # Start all"
+echo "  ./clean-restart.sh           # Clean restart"
 echo ""

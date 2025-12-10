@@ -19,6 +19,10 @@
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
+# Get script directory and source docker-compose compatibility helper
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPT_DIR/docker-compose-compat.sh"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -30,7 +34,7 @@ NC='\033[0m' # No Color
 BACKUP_DIR="workspace/backups"
 LOG_FILE="workspace/logs/upgrade.log"
 VERSION_FILE="VERSION"
-DOCKER_COMPOSE_FILE="docker-compose.yml"
+DOCKER_COMPOSE_FILE="$DOCKER_COMPOSE.yml"
 
 # Functions
 log() {
@@ -74,7 +78,7 @@ check_prerequisites() {
     fi
 
     # Check Docker Compose
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    if ! command -v $DOCKER_COMPOSE &> /dev/null && ! $DOCKER_COMPOSE version &> /dev/null; then
         error "Docker Compose is not installed"
     fi
 
@@ -197,19 +201,19 @@ perform_upgrade() {
 
     # Stop services
     info "Stopping services..."
-    docker-compose down || warning "Failed to stop some services"
+    $DOCKER_COMPOSE down || warning "Failed to stop some services"
 
     # Pull latest images
     info "Pulling latest Docker images..."
-    docker-compose pull || warning "Failed to pull some images"
+    $DOCKER_COMPOSE pull || warning "Failed to pull some images"
 
     # Rebuild images
     info "Rebuilding Docker images..."
-    docker-compose build --no-cache || error "Failed to rebuild images"
+    $DOCKER_COMPOSE build --no-cache || error "Failed to rebuild images"
 
     # Start services
     info "Starting services..."
-    docker-compose up -d || error "Failed to start services"
+    $DOCKER_COMPOSE up -d || error "Failed to start services"
 
     # Wait for services to be healthy
     info "Waiting for services to be healthy..."
@@ -256,7 +260,7 @@ rollback() {
     error "Rolling back to backup: ${backup_path}"
 
     # Stop services
-    docker-compose down || true
+    $DOCKER_COMPOSE down || true
 
     # Restore files
     if [ -d "${backup_path}" ]; then
@@ -285,7 +289,7 @@ rollback() {
 
     # Restart services
     info "Restarting services..."
-    docker-compose up -d || error "Failed to restart services after rollback"
+    $DOCKER_COMPOSE up -d || error "Failed to restart services after rollback"
 
     success "Rollback completed"
 }

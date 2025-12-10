@@ -5,6 +5,9 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Source docker-compose compatibility helper
+source "$SCRIPT_DIR/scripts/docker-compose-compat.sh"
+
 echo "╔══════════════════════════════════════════════════════╗"
 echo "║     Stopping MCP Agent Platform                      ║"
 echo "╚══════════════════════════════════════════════════════╝"
@@ -36,11 +39,11 @@ for container in mcp-agent mcp-file-tools mcp-nmap-recon; do
 done
 
 # Stop docker-compose services
-docker-compose stop
+$DOCKER_COMPOSE stop
 
 echo ""
 echo "✅ All services stopped"
 echo ""
-echo "To remove containers: docker-compose down"
+echo "To remove containers: $DOCKER_COMPOSE down"
 echo "To start again: ./start.sh"
 echo "To check status: ./status.sh"

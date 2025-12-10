@@ -1,0 +1,23 @@
+{
+  "context_limits": {
+    "agent_output_preview_tokens": 100,
+    "additional_context_max_tokens": 500,
+    "max_request_tokens": {
+      "gpt-5": 400000,
+      "gpt-4o": 128000,
+      "gpt-4-turbo": 128000,
+      "gpt-4": 8000,
+      "o3": 128000,
+      "o3-mini": 128000,
+      "o4-mini": 128000,
+      "claude-sonnet-4": 200000,
+      "claude-sonnet-4-5": 200000,
+      "claude-3-5-sonnet": 200000,
+      "claude-3-opus": 200000,
+      "claude-3-sonnet": 200000,
+      "claude-3-haiku": 200000
+    },
+    "safety_margin": 0.75,
+    "comment": "safety_margin = use only 75% of max to leave room for response. Updated for 2025 models: GPT-5 (400K), Claude Sonnet 4.5 (200K), o3/o4 series"
+  }
+}

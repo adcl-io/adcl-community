@@ -5,6 +5,9 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Source docker-compose compatibility helper
+source "$SCRIPT_DIR/scripts/docker-compose-compat.sh"
+
 SERVICE="${1:-all}"
 
 echo "╔══════════════════════════════════════════════════════╗"
@@ -17,19 +20,19 @@ echo ""
 if [ "$SERVICE" = "all" ]; then
     echo "📋 Viewing logs for ALL docker-compose services (Ctrl+C to exit)"
     echo ""
-    docker-compose logs -f
+    $DOCKER_COMPOSE logs -f
 elif [ "$SERVICE" = "api" ] || [ "$SERVICE" = "orchestrator" ]; then
     echo "📋 Viewing logs for API Server (Ctrl+C to exit)"
     echo ""
-    docker-compose logs -f orchestrator
+    $DOCKER_COMPOSE logs -f orchestrator
 elif [ "$SERVICE" = "registry" ]; then
     echo "📋 Viewing logs for Registry (Ctrl+C to exit)"
     echo ""
-    docker-compose logs -f registry
+    $DOCKER_COMPOSE logs -f registry
 elif [ "$SERVICE" = "frontend" ]; then
     echo "📋 Viewing logs for Frontend (Ctrl+C to exit)"
     echo ""
-    docker-compose logs -f frontend
+    $DOCKER_COMPOSE logs -f frontend
 elif [ "$SERVICE" = "agent" ] || [ "$SERVICE" = "mcp-agent" ]; then
     echo "📋 Viewing logs for Agent MCP (Ctrl+C to exit)"
     echo ""

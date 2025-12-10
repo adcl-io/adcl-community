@@ -2,7 +2,7 @@
 
 AI-Driven Cyber Lab (ADCL) Platform - Open source AI agent orchestration system.
 
-**Version:** 0.1.26
+**Version:** 0.1.27
 
 ## What is ADCL?
 
@@ -11,9 +11,8 @@ ADCL is a modular platform for orchestrating AI agents with specialized capabili
 ## Quick Start
 
 ```bash
+mkdir adcl && cd adcl
 curl -fsSL https://raw.githubusercontent.com/adcl-io/adcl-community/main/install.sh | bash
-vi .env #add your api keys for claude and openai
-./clean-restart.sh 
 ```
 
 Access the UI at: **http://localhost:3000**
@@ -29,11 +28,16 @@ cd adcl-community
 cp .env.example .env
 
 # Edit .env and add your API keys
-vi .env  # or vim, code, etc.
+nano .env  # or vim, code, etc.
 
-# Re-Start the platform
-./clean-restart.sh 
+# Start the platform
+docker-compose up -d
 
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
 ```
 
 ## Architecture
@@ -85,9 +89,9 @@ adcl/
 ## Docker Images
 
 Images are hosted on GitHub Container Registry (GHCR):
-- `ghcr.io/adcl-io/adcl-community/orchestrator:0.1.26`
-- `ghcr.io/adcl-io/adcl-community/frontend:0.1.26`
-- `ghcr.io/adcl-io/adcl-community/registry:0.1.26`
+- `ghcr.io/adcl-io/adcl-community/orchestrator:0.1.27`
+- `ghcr.io/adcl-io/adcl-community/frontend:0.1.27`
+- `ghcr.io/adcl-io/adcl-community/registry:0.1.27`
 
 ## Usage
 
@@ -110,9 +114,9 @@ The orchestrator exposes a REST API at http://localhost:8000
 ./stop.sh                          # Stop all services
 ./clean-restart.sh                 # Clean restart
 ./scripts/community-upgrade.sh     # Upgrade to latest version
-docker compose ps                  # Check status
-docker compose logs -f             # View all logs
-docker compose logs -f orchestrator  # View specific service
+docker-compose ps                  # Check status
+docker-compose logs -f             # View all logs
+docker-compose logs -f orchestrator  # View specific service
 ```
 
 ### Upgrading
@@ -140,11 +144,11 @@ This script:
 ### Orchestrator fails to start
 - Check Docker socket permissions: `ls -la /var/run/docker.sock`
 - Ensure Docker daemon is running: `docker ps`
-- Check logs: `docker compose logs orchestrator`
+- Check logs: `docker-compose logs orchestrator`
 
 ### MCP servers not starting
-- Check orchestrator logs: `docker compose logs orchestrator`
-- Verify registry is running: `docker compose ps registry`
+- Check orchestrator logs: `docker-compose logs orchestrator`
+- Verify registry is running: `docker-compose ps registry`
 - Check Docker network: `docker network ls | grep adcl`
 
 ### API keys not working

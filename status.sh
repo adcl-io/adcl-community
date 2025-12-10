@@ -5,6 +5,9 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Source docker-compose compatibility helper
+source "$SCRIPT_DIR/scripts/docker-compose-compat.sh"
+
 echo "╔══════════════════════════════════════════════════════╗"
 echo "║     MCP Agent Platform - Status Check               ║"
 echo "╚══════════════════════════════════════════════════════╝"
@@ -28,7 +31,7 @@ fi
 echo "📊 Container Status:"
 echo ""
 echo "Docker Compose Services:"
-docker-compose ps
+$DOCKER_COMPOSE ps
 
 echo ""
 echo "Dynamic MCP Containers:"
@@ -85,7 +88,7 @@ fi
 
 echo ""
 echo "💡 Useful commands:"
-echo "  - View logs:    docker-compose logs -f [service_name]"
-echo "  - Restart:      docker-compose restart [service_name]"
+echo "  - View logs:    $DOCKER_COMPOSE logs -f [service_name]"
+echo "  - Restart:      $DOCKER_COMPOSE restart [service_name]"
 echo "  - Stop all:     ./stop.sh"
 echo "  - Start all:    ./start.sh"

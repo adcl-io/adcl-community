@@ -20,6 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app/
+COPY tests/ ./tests/
 
 # Health check to ensure service is responding
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \

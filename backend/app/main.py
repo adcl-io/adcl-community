@@ -39,7 +39,7 @@ from anthropic import Anthropic
 from openai import OpenAI
 
 # Import API routers (PRD-99 refactoring)
-from app.api import agents, workflows, teams, models, mcps, executions, system
+from app.api import agents, workflows, teams, models, mcps, executions
 
 
 app = FastAPI(
@@ -282,7 +282,6 @@ app.include_router(teams.router)
 app.include_router(models.router)
 app.include_router(mcps.router)  # Routes already include /mcp and /mcps paths
 app.include_router(executions.router)
-app.include_router(system.router)  # System version and upgrade endpoints
 
 
 # API Routes
@@ -1589,12 +1588,17 @@ async def register_installed_mcp(mcp_package: Dict[str, Any]):
     # Determine endpoint based on network mode
     if deployment.get("network_mode") == "host":
         # Host mode: use host.docker.internal
-        port = (
-            mcp_package.get("deployment", {})
-            .get("environment", {})
-            .get("NMAP_PORT", str(config.get_nmap_port()))
-        )
-        port = port.replace("${NMAP_PORT:-", "").replace("}", "")
+        # Find port env var (e.g., KALI_PORT, NMAP_PORT)
+        env_vars = mcp_package.get("deployment", {}).get("environment", {})
+        port_var = next((k for k in env_vars.keys() if k.endswith("_PORT")), None)
+        
+        if port_var:
+            port = env_vars[port_var]
+            # Extract default value from ${VAR:-default} format
+            port = port.replace(f"${{{port_var}:-", "").replace("}", "")
+        else:
+            port = str(config.get_nmap_port())  # Fallback
+        
         endpoint = config.get_docker_host_url_pattern().format(port=port)
     else:
         # Bridge mode: use container name

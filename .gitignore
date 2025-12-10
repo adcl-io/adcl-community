@@ -37,4 +37,4 @@ volumes/
 Thumbs.db
 
 # Docker
-docker-compose.override.yml
+$DOCKER_COMPOSE.override.yml

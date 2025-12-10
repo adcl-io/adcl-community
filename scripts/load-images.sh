@@ -8,6 +8,10 @@
 
 set -euo pipefail
 
+# Get script directory and source docker-compose compatibility helper
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPT_DIR/docker-compose-compat.sh"
+
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -53,5 +57,5 @@ echo "Verify images:"
 echo "  docker images | grep adcl"
 echo ""
 echo "Start platform:"
-echo "  docker compose up -d"
+echo "  $DOCKER_COMPOSE up -d"
 echo ""

@@ -5,15 +5,18 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Source docker-compose compatibility helper
+source "$SCRIPT_DIR/scripts/docker-compose-compat.sh"
+
 echo "🔄 Restarting Agent MCP Server..."
 echo "📁 Project: $SCRIPT_DIR"
 echo ""
-docker-compose restart agent
+$DOCKER_COMPOSE restart agent
 
 echo ""
 echo "✅ Agent MCP Server restarted"
 echo ""
-docker-compose ps agent
+$DOCKER_COMPOSE ps agent
 
 echo ""
-echo "View logs: docker-compose logs -f agent"
+echo "View logs: $DOCKER_COMPOSE logs -f agent"

@@ -31,11 +31,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Sublist3r via pip
-RUN pip3 install --no-cache-dir sublist3r requests dnspython argparse
+RUN pip3 install --break-system-packages --no-cache-dir sublist3r requests dnspython argparse
 
 # Copy Python requirements
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --break-system-packages --no-cache-dir -r requirements.txt
 
 # Copy MCP server code
 COPY base_server.py .

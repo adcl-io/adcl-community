@@ -11,6 +11,10 @@
 
 set -euo pipefail
 
+# Get script directory and source docker-compose compatibility helper
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPT_DIR/docker-compose-compat.sh"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -73,9 +77,9 @@ echo -e "${GREEN}✅ Backup created: $backup_dir${NC}"
 echo ""
 
 # Detect compose file location
-COMPOSE_FILE="/docker-compose.yml"
+COMPOSE_FILE="/$DOCKER_COMPOSE.yml"
 if [ ! -f "$COMPOSE_FILE" ]; then
-    COMPOSE_FILE="docker-compose.yml"
+    COMPOSE_FILE="$DOCKER_COMPOSE.yml"
 fi
 
 # Validate compose file path (security: prevent injection)
@@ -86,7 +90,7 @@ fi
 
 # Pull latest images
 echo -e "${BLUE}Pulling latest images...${NC}"
-if ! docker compose -f "$COMPOSE_FILE" pull; then
+if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" pull; then
     echo -e "${RED}Failed to pull images${NC}"
     exit 1
 fi
@@ -95,7 +99,7 @@ echo ""
 
 # Restart containers
 echo -e "${BLUE}Restarting containers...${NC}"
-if ! docker compose -f "$COMPOSE_FILE" up -d; then
+if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d; then
     echo -e "${RED}Failed to restart containers${NC}"
     echo -e "${YELLOW}Rolling back...${NC}"
 
@@ -104,7 +108,7 @@ if ! docker compose -f "$COMPOSE_FILE" up -d; then
         cp "$backup_dir/.env" "$ENV_FILE"
     fi
 
-    docker compose -f "$COMPOSE_FILE" up -d
+    $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d
     echo -e "${RED}Upgrade failed, rolled back to previous version${NC}"
     exit 1
 fi
@@ -147,8 +151,8 @@ if [ -f "$backup_dir/.env" ]; then
 fi
 
 # Restart with old config
-docker compose -f "$COMPOSE_FILE" up -d
+$DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d
 
 echo -e "${RED}Upgrade failed and rolled back${NC}"
-echo "Check logs: docker compose -f $COMPOSE_FILE logs -f"
+echo "Check logs: $DOCKER_COMPOSE -f $COMPOSE_FILE logs -f"
 exit 1

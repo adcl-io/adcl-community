@@ -5,16 +5,19 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Source docker-compose compatibility helper
+source "$SCRIPT_DIR/scripts/docker-compose-compat.sh"
+
 echo "🔄 Restarting Frontend..."
 echo "📁 Project: $SCRIPT_DIR"
 echo ""
-docker-compose restart frontend
+$DOCKER_COMPOSE restart frontend
 
 echo ""
 echo "✅ Frontend restarted"
 echo ""
-docker-compose ps frontend
+$DOCKER_COMPOSE ps frontend
 
 echo ""
 echo "Frontend available at: http://localhost:3000"
-echo "View logs: docker-compose logs -f frontend"
+echo "View logs: $DOCKER_COMPOSE logs -f frontend"
