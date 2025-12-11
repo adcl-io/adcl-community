@@ -33,16 +33,33 @@ export default function Navigation({ currentPage, onNavigate }) {
   const { sessions, loadSessions, loadSession } = useConversationHistoryContext();
   const recentSessions = sessions.slice(0, 10);
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [currentVersion, setCurrentVersion] = useState('0.1.0');
+  const [currentVersion, setCurrentVersion] = useState('...');
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
 
   useEffect(() => {
     loadSessions();
+    // Fetch current version immediately on mount
+    fetchCurrentVersion();
+    // Then check for updates
     checkForUpdates();
     // Check for updates every 1 hour
     const interval = setInterval(checkForUpdates, 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, [loadSessions]);
+
+  const fetchCurrentVersion = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/system/version`);
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentVersion(data.version);
+      }
+    } catch (error) {
+      console.error('Failed to fetch current version:', error);
+      // Fallback to reading from meta tag or default
+      setCurrentVersion('0.1.27');
+    }
+  };
 
   const checkForUpdates = async () => {
     try {
