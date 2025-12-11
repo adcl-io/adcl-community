@@ -1,8 +1,8 @@
-## [0.1.27] - 2025-12-09
+## [0.1.27] - 2025-12-10
 
 ### Changes
-- Fix docker-compose-compat.sh source paths in all scripts
-- PRD-140: Add docker-compose compatibility across different Docker versions
+- PRD-144: Fix community-upgrade.sh to properly upgrade both files and containers
+- PRD-141: Fix multiple critical bugs (agent context, docker compose, playground) (#54)
 - PRD-139: Fix multi-agent team token limit errors (#52)
 - PRD-138: Release v0.1.26 - Documentation and tooling improvements (#51)
 - PRD-131: Implement SQL Injection Analyst agent (replaces workflow)

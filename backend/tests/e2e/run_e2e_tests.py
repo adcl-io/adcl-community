@@ -13,6 +13,7 @@ Runs comprehensive end-to-end tests and generates reports
 import asyncio
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 from test_playground_team import PlaygroundTeamTest
 import logging
@@ -93,11 +94,10 @@ async def run_all_tests(
     output_dir = Path(__file__).parent / "results"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    from datetime import datetime
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     report_path = output_dir / f"e2e_report_{timestamp}.json"
 
-    report = tester.generate_report(report_path)
+    tester.generate_report(report_path)
 
     logger.info(f"\n📊 Full report saved to: {report_path}")
 

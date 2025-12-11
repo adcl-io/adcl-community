@@ -1,22 +1,54 @@
 {
   "name": "Security Analysis Team",
   "description": "Comprehensive network security scanning and analysis",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "available_mcps": [
+    "nmap_recon",
+    "file_tools",
+    "agent",
+    "history"
+  ],
   "agents": [
     {
-      "name": "Scanner",
+      "agent_id": "network-scanner",
       "role": "Network Scanner",
-      "mcp_server": "nmap_recon"
+      "responsibilities": [
+        "Network reconnaissance and discovery",
+        "Port scanning and service detection",
+        "Vulnerability identification"
+      ],
+      "mcp_access": ["nmap_recon"]
     },
     {
-      "name": "Security Analyst",
+      "agent_id": "security-analyst",
       "role": "Security Expert",
-      "mcp_server": "agent"
+      "responsibilities": [
+        "Security analysis and risk assessment",
+        "Vulnerability analysis",
+        "Security recommendations"
+      ],
+      "mcp_access": ["nmap_recon", "agent", "file_tools"]
     },
     {
-      "name": "Reporter",
+      "agent_id": "documentation-specialist",
       "role": "Documentation Specialist",
-      "mcp_server": "file_tools"
+      "responsibilities": [
+        "Report generation",
+        "Documentation of findings",
+        "Executive summaries"
+      ],
+      "mcp_access": ["file_tools"]
     }
-  ]
+  ],
+  "coordination": {
+    "mode": "sequential",
+    "share_context": true,
+    "task_distribution": "automatic"
+  },
+  "tags": [
+    "security",
+    "network-analysis",
+    "multi-agent"
+  ],
+  "author": "ADCL Platform"
 }

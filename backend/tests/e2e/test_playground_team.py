@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 adcl.io
+# All Rights Reserved.
+#
+# This software is proprietary and confidential. Unauthorized copying,
+# distribution, or use of this software is strictly prohibited.
+
 """
 E2E Test: Team Execution with Performance Metrics
 Tests the complete workflow of running a multi-agent team
@@ -32,6 +38,15 @@ class PlaygroundTeamTest:
         self.api_url = api_url
         self.test_results: List[Dict[str, Any]] = []
 
+        # Load cost estimates from config
+        config_path = Path(__file__).parent.parent.parent.parent / "configs" / "runtime.json"
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+            self.cost_estimates = config.get("cost_estimates", {}).get("default", {
+                "input_cost_per_1k": 0.03,
+                "output_cost_per_1k": 0.06
+            })
+
     async def test_team_execution(
         self,
         team_name: str,
@@ -44,7 +59,7 @@ class PlaygroundTeamTest:
         Args:
             team_name: Name of team to test (e.g., "test-security-team")
             task: Task to give the team
-            timeout_seconds: Max time to wait for completion (unused in current API)
+            timeout_seconds: Max time to wait for completion
 
         Returns:
             Dict with test results and KPIs
@@ -66,7 +81,7 @@ class PlaygroundTeamTest:
             logger.info(f"Executing team: {team_name}")
             start_time = time.time()
 
-            execution_response = await self._execute_team(team_name, task)
+            execution_response = await self._execute_team(team_name, task, timeout_seconds)
             execution_time = time.time() - start_time
 
             # Extract KPIs from response
@@ -87,14 +102,14 @@ class PlaygroundTeamTest:
             result["status"] = "error"
             result["errors"].append(str(e))
             result["end_time"] = datetime.now().isoformat()
-            result["total_duration_seconds"] = time.time() - start_time if 'start_time' in locals() else 0
+            result["total_duration_seconds"] = time.time() - start_time
 
         self.test_results.append(result)
         return result
 
-    async def _execute_team(self, team_name: str, task: str) -> Dict:
+    async def _execute_team(self, team_name: str, task: str, timeout_seconds: int = 300) -> Dict:
         """Execute a team via API"""
-        async with httpx.AsyncClient(timeout=300.0) as client:
+        async with httpx.AsyncClient(timeout=float(timeout_seconds)) as client:
             response = await client.post(
                 f"{self.api_url}/teams/run",
                 json={
@@ -168,13 +183,10 @@ class PlaygroundTeamTest:
                     kpis["total_tokens"] / execution_time, 2
                 )
 
-            # Estimate cost (rough approximation for GPT-4/Claude)
-            # GPT-4: ~$0.03/1K input, $0.06/1K output
-            # Claude: ~$0.003/1K input, $0.015/1K output
-            # Using GPT-4 pricing as default
+            # Estimate cost using config-driven pricing
             if kpis["total_tokens"] > 0:
-                input_cost = (kpis["total_input_tokens"] / 1000) * 0.03
-                output_cost = (kpis["total_output_tokens"] / 1000) * 0.06
+                input_cost = (kpis["total_input_tokens"] / 1000) * self.cost_estimates["input_cost_per_1k"]
+                output_cost = (kpis["total_output_tokens"] / 1000) * self.cost_estimates["output_cost_per_1k"]
                 kpis["total_cost_usd"] = round(input_cost + output_cost, 4)
                 kpis["cost_per_1k_tokens"] = round(
                     (kpis["total_cost_usd"] / kpis["total_tokens"]) * 1000, 4
