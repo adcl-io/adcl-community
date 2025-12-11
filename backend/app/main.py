@@ -39,7 +39,7 @@ from anthropic import Anthropic
 from openai import OpenAI
 
 # Import API routers (PRD-99 refactoring)
-from app.api import agents, workflows, teams, models, mcps, executions, system
+from app.api import agents, workflows, teams, models, mcps, executions
 
 
 app = FastAPI(
@@ -282,7 +282,6 @@ app.include_router(teams.router)
 app.include_router(models.router)
 app.include_router(mcps.router)  # Routes already include /mcp and /mcps paths
 app.include_router(executions.router)
-app.include_router(system.router)  # System version and upgrade management
 
 
 # API Routes
