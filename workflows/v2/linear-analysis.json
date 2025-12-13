@@ -1,0 +1,13 @@
+{
+  "workflow_id": "linear-analysis",
+  "name": "Linear Issue Analysis",
+  "description": "Autonomous Linear issue analysis and action plan creation",
+  "nodes": [
+    {
+      "node_id": "analyze-issue",
+      "agent_id": "linear-analyst",
+      "timeout": 300
+    }
+  ],
+  "edges": []
+}

@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Any
 import re
 import os
 from datetime import datetime, UTC
-from app.config import get_config
+from app.core.config import get_config
 
 
 class DockerManager:

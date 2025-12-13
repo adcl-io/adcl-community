@@ -1,0 +1,26 @@
+{
+  "workflow_id": "example-serial",
+  "name": "Serial Workflow Example",
+  "description": "Demonstrates serial execution: A → B → C",
+  "nodes": [
+    {
+      "node_id": "analyze",
+      "agent_id": "security-analyst",
+      "timeout": 300
+    },
+    {
+      "node_id": "review",
+      "agent_id": "code-reviewer",
+      "timeout": 300
+    },
+    {
+      "node_id": "report",
+      "agent_id": "research-assistant",
+      "timeout": 300
+    }
+  ],
+  "edges": [
+    {"from": "analyze", "to": "review"},
+    {"from": "review", "to": "report"}
+  ]
+}

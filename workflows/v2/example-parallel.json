@@ -1,0 +1,35 @@
+{
+  "workflow_id": "example-parallel",
+  "name": "Parallel Workflow Example",
+  "description": "Demonstrates parallel execution: A → [B, C] → D",
+  "nodes": [
+    {
+      "node_id": "start",
+      "agent_id": "research-assistant",
+      "timeout": 300
+    },
+    {
+      "node_id": "security-check",
+      "agent_id": "security-analyst",
+      "branch_name": "security",
+      "timeout": 300
+    },
+    {
+      "node_id": "code-check",
+      "agent_id": "code-reviewer",
+      "branch_name": "code",
+      "timeout": 300
+    },
+    {
+      "node_id": "converge",
+      "agent_id": "research-assistant",
+      "timeout": 300
+    }
+  ],
+  "edges": [
+    {"from": "start", "to": "security-check"},
+    {"from": "start", "to": "code-check"},
+    {"from": "security-check", "to": "converge"},
+    {"from": "code-check", "to": "converge"}
+  ]
+}

@@ -16,7 +16,6 @@ import yaml
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from app.core.config import Settings
 from app.core.errors import NotFoundError, ValidationError, ConflictError
 from app.core.logging import get_service_logger
 
@@ -39,16 +38,16 @@ class ModelService:
     API keys come from environment variables only.
     """
 
-    def __init__(self, models_config_path: Path, settings: Settings):
+    def __init__(self, models_config_path: Path, config):
         """
         Initialize ModelService.
 
         Args:
             models_config_path: Path to models.yaml config file
-            settings: Application settings for API key checking
+            config: Application configuration for API key checking
         """
         self.models_config_path = models_config_path
-        self.settings = settings
+        self.config = config
         self.models = []  # In-memory cache
         self.lock = asyncio.Lock()  # Thread safety
         logger.info(f"ModelService initialized with config: {models_config_path}")
@@ -94,9 +93,11 @@ class ModelService:
                     # Determine if model is configured based on environment
                     api_key_env = model_config.get("api_key_env", "")
                     if api_key_env == "ANTHROPIC_API_KEY":
-                        configured = bool(self.settings.anthropic_api_key)
+                        from app.core.config import get_anthropic_api_key
+                        configured = bool(get_anthropic_api_key())
                     elif api_key_env == "OPENAI_API_KEY":
-                        configured = bool(self.settings.openai_api_key)
+                        from app.core.config import get_openai_api_key
+                        configured = bool(get_openai_api_key())
                     else:
                         configured = False
 

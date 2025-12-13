@@ -33,13 +33,14 @@ from uuid import uuid4
 from app.docker_manager import DockerManager
 from app.agent_runtime import AgentRuntime
 from app.team_runtime import TeamRuntime
-from app.config import get_config
+from app.core.config import get_config
 from app.core.errors import sanitize_error_for_user
 from anthropic import Anthropic
 from openai import OpenAI
 
 # Import API routers (PRD-99 refactoring)
 from app.api import agents, workflows, teams, models, mcps, executions
+from app.api.v2 import workflows as workflows_v2
 
 
 app = FastAPI(
@@ -272,12 +273,33 @@ team_runtime = TeamRuntime(
     teams_dir=Path(config.get_agent_teams_path()),
 )
 
+# Initialize Workflow V2 Service
+from app.services.workflow_v2_service import WorkflowV2Service
+from app.services.agent_service import AgentService
+from app.workflow_v2.executor import WorkflowExecutor
+from app.api.v2.workflows import get_workflow_v2_service
+
+agent_service = AgentService(agents_dir=Path(config.get_agent_definitions_path()))
+workflow_v2_executor = WorkflowExecutor(
+    agent_runtime=agent_runtime,
+    agent_service=agent_service,
+    history_mcp_url=config.history_mcp_url
+)
+workflow_v2_service = WorkflowV2Service(
+    workflows_dir=Path("workflows/v2"),
+    executor=workflow_v2_executor
+)
+
+# Override dependency
+app.dependency_overrides[get_workflow_v2_service] = lambda: workflow_v2_service
+
 
 # Mount API routers (PRD-99 refactoring)
 # Note: All routers either have prefixes defined or include full paths in their routes,
 # so we don't add prefixes here to avoid double-prefixing (e.g., /agents/agents).
 app.include_router(agents.router)
 app.include_router(workflows.router)
+app.include_router(workflows_v2.router)  # V2 workflows at /v2/workflows/*
 app.include_router(teams.router)
 app.include_router(models.router)
 app.include_router(mcps.router)  # Routes already include /mcp and /mcps paths

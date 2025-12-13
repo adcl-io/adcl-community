@@ -15,7 +15,6 @@ import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from app.core.config import Settings
 from app.core.errors import NotFoundError, ValidationError, ConflictError
 from app.core.logging import get_service_logger
 

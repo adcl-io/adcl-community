@@ -12,8 +12,9 @@ Follows ADCL principle: Modular architecture with clear dependencies.
 """
 
 from typing import Generator
+from pathlib import Path
 from fastapi import Depends, HTTPException, Request, status
-from app.core.config import Settings, get_settings
+from app.core.config import Config, get_config
 from app.core.logging import get_logger
 
 # Logger
@@ -21,66 +22,66 @@ logger = get_logger(__name__)
 
 
 # Configuration dependency
-def get_current_settings() -> Settings:
+def get_current_config() -> Config:
     """
-    Get current application settings.
+    Get current application configuration.
 
     Returns:
-        Settings: Application configuration
+        Config: Application configuration
     """
-    return get_settings()
+    return get_config()
 
 
 # Service dependencies (Phase 3: Dependency Injection)
 
 def get_agent_service(
-    settings: Settings = Depends(get_current_settings)
+    config: Config = Depends(get_current_config)
 ):
     """Get AgentService instance."""
     from app.services.agent_service import AgentService
-    return AgentService(agents_dir=settings.agent_definitions_dir)
+    return AgentService(agents_dir=Path(config.agent_definitions_path))
 
 
 def get_workflow_service(
     request: Request,
-    settings: Settings = Depends(get_current_settings)
+    config: Config = Depends(get_current_config)
 ):
     """Get WorkflowService instance."""
     from app.services.workflow_service import WorkflowService
     # Get workflow engine from app.state (initialized at startup)
     engine = request.app.state.workflow_engine
     return WorkflowService(
-        workflows_dir=settings.workflows_dir,
+        workflows_dir=Path(config.workflows_path),
         workflow_engine=engine
     )
 
 
 def get_team_service(
-    settings: Settings = Depends(get_current_settings)
+    config: Config = Depends(get_current_config)
 ):
     """Get TeamService instance."""
     from app.services.team_service import TeamService
-    return TeamService(teams_dir=settings.agent_teams_dir)
+    return TeamService(teams_dir=Path(config.agent_teams_path))
 
 
 def get_execution_service(
-    settings: Settings = Depends(get_current_settings)
+    config: Config = Depends(get_current_config)
 ):
     """Get ExecutionService instance."""
     from app.services.execution_service import ExecutionService
-    return ExecutionService(executions_dir=settings.volumes_dir / "executions")
+    return ExecutionService(executions_dir=Path(config.volumes_path) / "executions")
 
 
 def get_model_service(
-    settings: Settings = Depends(get_current_settings)
+    config: Config = Depends(get_current_config)
 ):
     """Get ModelService instance."""
     from app.services.model_service import ModelService
     # Note: This creates a new instance per request
     # For production, consider singleton pattern with async initialization
     service = ModelService(
-        models_config_path=settings.models_config_path,
-        settings=settings
+        models_config_path=Path(config.models_config_path),
+        config=config
     )
     return service
 

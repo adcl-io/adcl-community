@@ -14,12 +14,13 @@ This package contains:
 - logging: Structured logging
 """
 
-from app.core.config import settings
+from app.core.config import get_config, Config
 from app.core.errors import ADCLError, NotFoundError, ValidationError
 from app.core.logging import get_logger
 
 __all__ = [
-    "settings",
+    "get_config",
+    "Config",
     "ADCLError",
     "NotFoundError",
     "ValidationError",

@@ -14,11 +14,11 @@ import pytest
 import yaml
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from app.services.model_service import ModelService
 from app.core.errors import NotFoundError, ValidationError, ConflictError
-from app.core.config import Settings
+from app.core.config import Config
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def temp_models_config():
         config_path.write_text(yaml.safe_dump({
             "models": [
                 {
-                    "id": "claude-sonnet",
+                    "id": "anthropic-claude-sonnet-4",
                     "name": "Claude Sonnet",
                     "provider": "anthropic",
                     "model_id": "claude-sonnet-4",
@@ -45,18 +45,16 @@ def temp_models_config():
 
 
 @pytest.fixture
-def mock_settings():
-    """Mock Settings object"""
-    settings = MagicMock(spec=Settings)
-    settings.anthropic_api_key = "test-key"
-    settings.openai_api_key = None
-    return settings
+def mock_config():
+    """Mock Config object"""
+    config = MagicMock(spec=Config)
+    return config
 
 
 @pytest.fixture
-def model_service(temp_models_config, mock_settings):
+def model_service(temp_models_config, mock_config):
     """Create ModelService instance"""
-    return ModelService(models_config_path=temp_models_config, settings=mock_settings)
+    return ModelService(models_config_path=temp_models_config, config=mock_config)
 
 
 class TestLoadFromConfig:
@@ -65,16 +63,17 @@ class TestLoadFromConfig:
     @pytest.mark.asyncio
     async def test_loads_models_from_yaml(self, model_service):
         """Should load models from YAML config"""
-        models = await model_service.load_from_config()
-        
+        with patch("app.core.config.get_anthropic_api_key", return_value="test-key"):
+            models = await model_service.load_from_config()
+
         assert len(models) == 1
-        assert models[0]["id"] == "claude-sonnet"
+        assert models[0]["id"] == "anthropic-claude-sonnet-4"
         assert models[0]["configured"] is True
 
     @pytest.mark.asyncio
-    async def test_handles_missing_config_file(self, mock_settings):
+    async def test_handles_missing_config_file(self, mock_config):
         """Should handle missing config file gracefully"""
-        service = ModelService(models_config_path=Path("/nonexistent.yaml"), settings=mock_settings)
+        service = ModelService(models_config_path=Path("/nonexistent.yaml"), config=mock_config)
         models = await service.load_from_config()
         
         assert models == []
@@ -114,14 +113,15 @@ class TestCreateModel:
     @pytest.mark.asyncio
     async def test_prevents_duplicate_ids(self, model_service):
         """Should prevent creating duplicate model IDs"""
-        await model_service.load_from_config()
-        
+        with patch("app.core.config.get_anthropic_api_key", return_value="test-key"):
+            await model_service.load_from_config()
+
         duplicate_model = {
             "name": "Claude Sonnet",
             "provider": "anthropic",
             "model_id": "claude-sonnet-4"
         }
-        
+
         with pytest.raises(ConflictError):
             await model_service.create_model(duplicate_model)
 
@@ -132,10 +132,11 @@ class TestDeleteModel:
     @pytest.mark.asyncio
     async def test_prevents_deleting_default_model(self, model_service):
         """Should prevent deleting default model"""
-        await model_service.load_from_config()
-        
+        with patch("app.core.config.get_anthropic_api_key", return_value="test-key"):
+            await model_service.load_from_config()
+
         with pytest.raises(ValidationError):
-            await model_service.delete_model("claude-sonnet")
+            await model_service.delete_model("anthropic-claude-sonnet-4")
 
 
 class TestSetDefaultModel:
@@ -144,17 +145,18 @@ class TestSetDefaultModel:
     @pytest.mark.asyncio
     async def test_sets_model_as_default(self, model_service):
         """Should set model as default"""
-        await model_service.load_from_config()
-        
-        # Create second model
+        with patch("app.core.config.get_anthropic_api_key", return_value="test-key"):
+            await model_service.load_from_config()
+
+        # Create second model with API key to make it configured
         new_model = {
             "name": "GPT-4",
             "provider": "openai",
             "model_id": "gpt-4",
-            "configured": True
+            "api_key": "test-openai-key"
         }
         await model_service.create_model(new_model)
-        
+
         # Set as default
         result = await model_service.set_default_model("openai-gpt-4")
         assert result["default_model"]["is_default"] is True

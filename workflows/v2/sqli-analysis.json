@@ -1,0 +1,13 @@
+{
+  "workflow_id": "sqli-analysis",
+  "name": "SQL Injection Analysis",
+  "description": "Automated SQL injection vulnerability assessment using sqli-analyst agent",
+  "nodes": [
+    {
+      "node_id": "sqli-scan",
+      "agent_id": "sqli-analyst",
+      "timeout": 3600
+    }
+  ],
+  "edges": []
+}

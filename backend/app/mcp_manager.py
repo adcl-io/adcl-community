@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from docker.models.containers import Container
 from docker.models.networks import Network
-from app.config import get_config
+from app.core.config import get_config
 
 
 class MCPManager:

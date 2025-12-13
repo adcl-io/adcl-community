@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-from app.core.config import Settings
 from app.core.errors import NotFoundError
 from app.core.logging import get_service_logger
 

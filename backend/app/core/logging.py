@@ -14,7 +14,7 @@ Follows ADCL principle: Structured output for machine readability.
 import logging
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional, Any
 from pathlib import Path
 
@@ -37,7 +37,7 @@ class JSONFormatter(logging.Formatter):
             JSON-formatted log string
         """
         log_data = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -138,21 +138,23 @@ def log_event(
 # Pre-configured loggers
 def get_api_logger() -> logging.Logger:
     """Get logger for API routes."""
-    from app.core.config import settings
+    from app.core.config import get_config
+    config = get_config()
     return get_logger(
         "adcl.api",
-        log_level=settings.log_level,
-        log_format=settings.log_format
+        log_level=config.log_level,
+        log_format=config.log_format
     )
 
 
 def get_service_logger(service_name: str) -> logging.Logger:
     """Get logger for service layer."""
-    from app.core.config import settings
+    from app.core.config import get_config
+    config = get_config()
     return get_logger(
         f"adcl.service.{service_name}",
-        log_level=settings.log_level,
-        log_format=settings.log_format
+        log_level=config.log_level,
+        log_format=config.log_format
     )
 
 
@@ -162,10 +164,12 @@ def get_audit_logger() -> logging.Logger:
 
     Audit logs go to separate file for compliance.
     """
-    from app.core.config import settings
+    from app.core.config import get_config
+    config = get_config()
     from datetime import date
 
-    log_file = settings.logs_dir / f"audit-{date.today().isoformat()}.log"
+    from pathlib import Path
+    log_file = Path(config.logs_path) / f"audit-{date.today().isoformat()}.log"
     return get_logger(
         "adcl.audit",
         log_level="INFO",

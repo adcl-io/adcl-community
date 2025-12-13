@@ -347,10 +347,27 @@ async def execute_workflow_async(
     try:
         async with httpx.AsyncClient(timeout=120.0) as client:
             if workflow_id:
-                response = await client.post(
-                    f"{ORCHESTRATOR_URL}/workflows/execute",
-                    json={"workflow_id": workflow_id, "params": params}
-                )
+                # Check if V2 workflow exists
+                v2_check = await client.get(f"{ORCHESTRATOR_URL}/v2/workflows/{workflow_id}")
+                if v2_check.status_code == 200:
+                    # Use V2 endpoint - construct initial message from Linear event
+                    session_id = params.get("session_id", "")
+                    issue_id = params.get("issue_id", "")
+                    state = params.get("state", "")
+                    action = params.get("action", "")
+                    
+                    initial_message = f"Linear agent session {action}: session_id={session_id}, issue_id={issue_id}, state={state}"
+                    
+                    response = await client.post(
+                        f"{ORCHESTRATOR_URL}/v2/workflows/run",
+                        json={"workflow_id": workflow_id, "initial_message": initial_message}
+                    )
+                else:
+                    # Use V1 endpoint
+                    response = await client.post(
+                        f"{ORCHESTRATOR_URL}/workflows/execute",
+                        json={"workflow_id": workflow_id, "params": params}
+                    )
             elif team_id:
                 response = await client.post(
                     f"{ORCHESTRATOR_URL}/teams/{team_id}/execute",
