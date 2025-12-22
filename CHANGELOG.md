@@ -1,9 +1,18 @@
-## [0.1.28] - 2025-12-13
+## [0.1.29] - 2025-12-21
 
 ### Changes
-- PRD-149: Add missing URL pattern compatibility methods
-- PRD-149: Fix critical API compatibility issues found by code-nitpicker-9000
-- PRD-149: Consolidate dual config systems into single YAML-based Config
+- PRD-169: Fix inputSchema case mismatch breaking AI agent tool calls
+- Add complete license header to test_zap_mcp.py
+- PRD-147: Implement SPA Discovery Agent with ZAP and Playwright MCPs
+- PRD-147: Add ZAP Security Testing MCP documentation suite
+- PRD-160: Create unified MCP protocol architecture document
+- PRD-160: Update base_server.py in all MCP subdirectories
+- PRD-160: Add unit tests for MCP protocol (Phase 4)
+- PRD-160: Implement MCP protocol support (Phases 1-3)
+- PRD-160: MCP Session Management - Design Documentation
+- Add ChatGPT-style inline updates with real-time agent progress (#62)
+- PRD-159: Fix post-deployment bugs (#60)
+- PRD-149: Fix broken main - consolidate dual config systems (#59)
 - PRD-146: Address critical code review feedback
 - PRD-136: Remove implementation artifacts (preserved in git history)
 - PRD-136: Implement Workflow Engine V2 with DAG execution
@@ -66,6 +75,25 @@
 - Feature/cleanup (#14)
 - mostly clean up in mcp; re-organized to make them truly modular (#13)
 - quick spec writeup based on core arch; (#12)
+
+## [0.1.28] - 2025-12-14
+
+### Fixed
+- PRD-159: Add `nuke.sh` script to stop/remove containers without auto-restart
+- PRD-159: Deprecate confusing `-nuke` flag in `clean-restart.sh`, add `--force` flag instead
+- PRD-159: Add frontend loading state with API health check and exponential backoff retry
+- PRD-159: Create comprehensive API key troubleshooting guide
+
+### Changes
+- Frontend now shows loading screen while waiting for API server to initialize
+- `clean-restart.sh -nuke` is deprecated (shows error with migration instructions)
+- Use `./clean-restart.sh --force` for rebuild without cache
+- Use `./nuke.sh` to stop/remove all containers without restarting
+- Use `./nuke.sh --images` to also remove images
+- Use `./nuke.sh --full` to remove containers, images, and volumes
+
+### Documentation
+- Added `docs/troubleshooting-api-keys.md` with comprehensive API key troubleshooting guide
 
 ## [0.1.27] - 2025-12-10
 

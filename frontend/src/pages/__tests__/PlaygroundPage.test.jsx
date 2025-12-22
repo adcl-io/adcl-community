@@ -40,6 +40,8 @@ vi.mock('../../contexts/ConversationHistoryContext', () => ({
 describe('PlaygroundPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock axios for teams
     axios.get.mockResolvedValue({
       data: [
         {
@@ -53,6 +55,20 @@ describe('PlaygroundPage', () => {
         }
       ]
     });
+
+    // Mock fetch for token requests (PlaygroundPage uses fetch, not axios)
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          total_input_tokens: 100,
+          total_output_tokens: 200,
+          cumulative_input_tokens: 100,
+          cumulative_output_tokens: 200,
+          total_cost: 0.0123
+        })
+      })
+    );
   });
 
   it('renders without history sidebar', () => {

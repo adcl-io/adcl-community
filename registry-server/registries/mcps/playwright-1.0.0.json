@@ -1,0 +1,62 @@
+{
+  "name": "playwright",
+  "version": "1.0.0",
+  "description": "Playwright browser automation MCP",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": "./mcp_servers/playwright",
+      "dockerfile": "Dockerfile"
+    },
+    "image": "mcp-playwright:1.0.0",
+    "container_name": "mcp-playwright",
+    "ports": [
+      {
+        "host": "7007",
+        "container": "7007"
+      }
+    ],
+    "environment": {
+      "PLAYWRIGHT_PORT": "7007"
+    },
+    "networks": ["mcp-network"],
+    "restart": "unless-stopped"
+  },
+  "requirements": {
+    "min_memory": "1G",
+    "min_cpu": "0.5"
+  },
+  "tools": [
+    {
+      "name": "browser_navigate",
+      "description": "Navigate to URL"
+    },
+    {
+      "name": "browser_click",
+      "description": "Click element"
+    },
+    {
+      "name": "browser_type",
+      "description": "Type text"
+    },
+    {
+      "name": "browser_fill_form",
+      "description": "Fill form fields"
+    },
+    {
+      "name": "browser_wait_for",
+      "description": "Wait for conditions"
+    },
+    {
+      "name": "browser_snapshot",
+      "description": "Get accessibility snapshot"
+    },
+    {
+      "name": "browser_take_screenshot",
+      "description": "Take screenshot"
+    }
+  ],
+  "tags": ["browser", "automation", "playwright", "testing"],
+  "author": "ADCL Platform Team",
+  "license": "MIT"
+}

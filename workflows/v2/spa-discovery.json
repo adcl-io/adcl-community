@@ -1,0 +1,13 @@
+{
+  "workflow_id": "spa-discovery",
+  "name": "SPA Security Discovery",
+  "description": "Single-agent workflow for discovering and testing API endpoints in Single Page Applications",
+  "nodes": [
+    {
+      "node_id": "scan",
+      "agent_id": "spa-discovery-agent",
+      "timeout": 3600
+    }
+  ],
+  "edges": []
+}

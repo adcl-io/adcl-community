@@ -1,0 +1,33 @@
+{
+  "name": "zap",
+  "version": "1.0.0",
+  "description": "OWASP ZAP security scanner MCP",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": ".",
+      "dockerfile": "Dockerfile"
+    },
+    "image": "mcp-zap:1.0.0",
+    "container_name": "mcp-zap",
+    "ports": [
+      {"host": "7008", "container": "7008"},
+      {"host": "8080", "container": "8080"},
+      {"host": "8090", "container": "8090"}
+    ],
+    "networks": ["mcp-network"],
+    "environment": {
+      "PYTHONUNBUFFERED": "1",
+      "ZAP_PORT": "7008",
+      "ALLOWED_SCAN_TARGETS": "http://host.docker.internal:*,http://localhost:*,http://127.0.0.1:*"
+    }
+  },
+  "tools": [
+    {"name": "start_proxy", "description": "Start ZAP proxy daemon"},
+    {"name": "get_urls", "description": "Query discovered endpoints"},
+    {"name": "active_scan", "description": "Run vulnerability scan"},
+    {"name": "get_scan_status", "description": "Check scan progress"},
+    {"name": "get_alerts", "description": "Query findings"},
+    {"name": "generate_report", "description": "Export results"}
+  ]
+}

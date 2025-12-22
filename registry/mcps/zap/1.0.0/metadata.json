@@ -1,0 +1,11 @@
+{
+  "id": "zap",
+  "name": "OWASP ZAP Security Scanner",
+  "version": "1.0.0",
+  "description": "OWASP ZAP security scanner MCP for vulnerability testing",
+  "author": "ADCL Platform Team",
+  "type": "mcp",
+  "source": "local",
+  "path": "./mcp_servers/zap",
+  "tags": ["security", "zap", "vulnerability-scanning", "web-security"]
+}

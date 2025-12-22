@@ -1,0 +1,68 @@
+{
+  "name": "zap",
+  "version": "1.0.0",
+  "description": "OWASP ZAP security scanner MCP for vulnerability testing",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": "./mcp_servers/zap",
+      "dockerfile": "Dockerfile"
+    },
+    "image": "mcp-zap:1.0.0",
+    "container_name": "mcp-zap",
+    "ports": [
+      {
+        "host": "7008",
+        "container": "7008"
+      },
+      {
+        "host": "8080",
+        "container": "8080"
+      },
+      {
+        "host": "8090",
+        "container": "8090"
+      }
+    ],
+    "environment": {
+      "PYTHONUNBUFFERED": "1",
+      "ZAP_PORT": "7008",
+      "ALLOWED_SCAN_TARGETS": "http://172.31.2.137:*,http://localhost:*,http://127.0.0.1:*"
+    },
+    "networks": ["mcp-network"],
+    "restart": "unless-stopped"
+  },
+  "requirements": {
+    "min_memory": "2G",
+    "min_cpu": "1.0"
+  },
+  "tools": [
+    {
+      "name": "start_proxy",
+      "description": "Start ZAP proxy daemon"
+    },
+    {
+      "name": "get_urls",
+      "description": "Query discovered endpoints"
+    },
+    {
+      "name": "active_scan",
+      "description": "Run vulnerability scan"
+    },
+    {
+      "name": "get_scan_status",
+      "description": "Check scan progress"
+    },
+    {
+      "name": "get_alerts",
+      "description": "Query findings"
+    },
+    {
+      "name": "generate_report",
+      "description": "Export results"
+    }
+  ],
+  "tags": ["security", "zap", "vulnerability-scanning", "web-security"],
+  "author": "ADCL Platform Team",
+  "license": "MIT"
+}

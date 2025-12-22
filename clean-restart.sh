@@ -4,14 +4,25 @@
 #
 # Usage:
 #   ./clean-restart.sh         # Normal clean restart (uses cache)
-#   ./clean-restart.sh -nuke   # Nuclear option: rebuild from scratch (no cache)
+#   ./clean-restart.sh --force # Force rebuild without cache
+#   ./nuke.sh                  # To stop/remove WITHOUT restarting
 
 set -e
 
 # Parse arguments
 NUKE_MODE=false
-if [ "$1" == "-nuke" ] || [ "$1" == "--nuke" ]; then
+if [ "$1" == "--force" ]; then
     NUKE_MODE=true
+elif [ "$1" == "-nuke" ] || [ "$1" == "--nuke" ]; then
+    echo "❌ Error: -nuke flag is deprecated"
+    echo ""
+    echo "Use instead:"
+    echo "  ./clean-restart.sh --force    # Clean restart with force rebuild (no cache)"
+    echo "  ./nuke.sh                     # Stop and remove all (no restart)"
+    echo "  ./nuke.sh --images            # Also remove images"
+    echo "  ./nuke.sh --full              # Remove containers, images, and volumes"
+    echo ""
+    exit 1
 fi
 
 # Get the directory where this script is located
@@ -23,8 +34,8 @@ source "$SCRIPT_DIR/scripts/docker-compose-compat.sh"
 
 echo "╔══════════════════════════════════════════════════════╗"
 if [ "$NUKE_MODE" = true ]; then
-    echo "║     MCP Agent Platform - NUCLEAR RESTART ☢️          ║"
-    echo "║     (Force rebuild without cache)                   ║"
+    echo "║     MCP Agent Platform - FORCE REBUILD               ║"
+    echo "║     (Rebuild from scratch without cache)            ║"
 else
     echo "║     MCP Agent Platform - Clean Restart               ║"
 fi
@@ -57,7 +68,7 @@ $DOCKER_COMPOSE down
 
 if [ "$NUKE_MODE" = true ]; then
     echo ""
-    echo "☢️  NUCLEAR MODE: Removing images to force clean rebuild..."
+    echo "🔨 FORCE REBUILD: Removing images to force clean rebuild..."
     echo "  └─ Removing orchestrator, registry, and frontend images..."
     docker rmi demo-sandbox_orchestrator demo-sandbox_registry demo-sandbox_frontend 2>/dev/null || true
 
@@ -97,7 +108,11 @@ echo "💡 Useful commands:"
 echo "  - View logs:      ./logs.sh [service_name]"
 echo "  - Status:         ./status.sh"
 echo "  - Stop:           ./stop.sh"
-echo "  - Nuclear reset:  ./clean-restart.sh -nuke"
+echo "  - Force rebuild:  ./clean-restart.sh --force"
+echo "  - Nuclear option: ./nuke.sh (stop/remove without restart)"
 echo ""
-echo "ℹ️  Use -nuke option to force rebuild from scratch (no cache)"
-echo "   Example: ./clean-restart.sh -nuke"
+echo "ℹ️  Options:"
+echo "   ./clean-restart.sh --force    # Force rebuild from scratch (no cache)"
+echo "   ./nuke.sh                     # Stop and remove all (no restart)"
+echo "   ./nuke.sh --images            # Also remove images"
+echo "   ./nuke.sh --full              # Remove everything (containers, images, volumes)"

@@ -13,9 +13,13 @@ from typing import Dict, List, Any, Optional
 import json
 import asyncio
 import aiohttp
+import logging
 from datetime import datetime
 from app.token_tracker import get_token_tracker
 from app.utils.token_counter import get_token_counter
+from app.mcp_session_manager import MCPSessionManager
+
+logger = logging.getLogger(__name__)
 
 
 class AgentRuntime:
@@ -36,6 +40,7 @@ class AgentRuntime:
         self.mcp_registry = mcp_registry
         self.anthropic_client = anthropic_client
         self.openai_client = openai_client
+        self.mcp_session_manager = MCPSessionManager()
 
     def _get_client_for_model(self, model_name: str):
         """Determine which client to use based on model name"""
@@ -138,6 +143,17 @@ class AgentRuntime:
 
             # Dual logging (ADCL principle: print for Docker logs AND callback for SSE)
             print(f"  Iteration {iteration}/{max_iterations}...")
+
+            # Send iteration start event
+            if progress_callback:
+                await progress_callback(
+                    {
+                        "type": "iteration_start",
+                        "agent": agent_definition.get("id", agent_definition.get("name")),
+                        "iteration": iteration,
+                        "max_iterations": max_iterations,
+                    }
+                )
 
             try:
                 # Determine which AI provider to use
@@ -242,16 +258,25 @@ class AgentRuntime:
                     )
                     print(f"    💭 Thinking: {reasoning.strip()[:100]}...")
 
-                # Extract tool calls info for display (with arguments for better UX)
+                    # Send reasoning as separate event for better visibility
+                    if progress_callback:
+                        await progress_callback(
+                            {
+                                "type": "agent_reasoning",
+                                "agent": agent_definition.get("id", agent_definition.get("name")),
+                                "reasoning": reasoning.strip(),
+                                "iteration": iteration,
+                            }
+                        )
+
+                # Extract tool calls info for display
                 tool_calls_info = []
                 for block in response.content:
                     if block.type == "tool_use":
-                        # Create human-readable summary of tool call
                         tool_info = {
                             "name": block.name,
                             "id": block.id,
-                            "input": block.input,
-                            "summary": self._format_tool_call_summary(block.name, block.input)
+                            "input": block.input
                         }
                         tool_calls_info.append(tool_info)
 
@@ -296,13 +321,11 @@ class AgentRuntime:
 
                         # Send real-time update for this specific tool call
                         if progress_callback:
-                            tool_summary = self._format_tool_call_summary(tool_call.name, tool_call.input)
                             await progress_callback(
                                 {
                                     "type": "tool_execution",
                                     "agent": agent_definition.get("id", agent_definition.get("name")),
                                     "tool_name": tool_call.name,
-                                    "tool_summary": tool_summary,
                                     "tool_input": tool_call.input,
                                     "iteration": iteration,
                                 }
@@ -313,6 +336,20 @@ class AgentRuntime:
                             tool_call.input,
                             agent_definition["available_mcps"],
                         )
+
+                        # Send tool result update immediately after execution
+                        if progress_callback:
+                            await progress_callback(
+                                {
+                                    "type": "tool_result",
+                                    "agent": agent_definition.get("id", agent_definition.get("name")),
+                                    "tool_name": tool_call.name,
+                                    "tool_input": tool_call.input,
+                                    "result": result,
+                                    "iteration": iteration,
+                                    "success": "error" not in result,
+                                }
+                            )
 
                         tool_results.append(
                             {
@@ -344,6 +381,19 @@ class AgentRuntime:
                             final_text += block.text
 
                     print(f"\n✅ Agent completed task in {iteration} iterations\n")
+
+                    # Send final answer update before returning
+                    if progress_callback:
+                        await progress_callback(
+                            {
+                                "type": "agent_answer",
+                                "agent": agent_definition.get("id", agent_definition.get("name")),
+                                "answer": final_text,
+                                "iteration": iteration,
+                                "total_iterations": iteration,
+                                "status": "completed",
+                            }
+                        )
 
                     result = {
                         "status": "completed",
@@ -419,80 +469,6 @@ class AgentRuntime:
             "partial_result": messages[-1] if messages else None,
         }
 
-    def _format_tool_call_summary(self, tool_name: str, tool_input: Dict[str, Any]) -> str:
-        """
-        Create human-readable summary of a tool call for better UX feedback
-
-        Examples:
-        - read_file with {"path": "foo.py"} → "Reading foo.py"
-        - search_code with {"query": "main"} → "Searching for 'main'"
-        - execute_command with {"command": "ls"} → "Running 'ls'"
-        """
-        # Extract the base tool name (after the MCP prefix)
-        if "__" in tool_name:
-            _, base_tool = tool_name.split("__", 1)
-        else:
-            base_tool = tool_name
-
-        # Common file operations
-        if "read" in base_tool.lower():
-            if "path" in tool_input:
-                return f"Reading {tool_input['path']}"
-            elif "file" in tool_input:
-                return f"Reading {tool_input['file']}"
-
-        elif "write" in base_tool.lower() or "create" in base_tool.lower():
-            if "path" in tool_input:
-                return f"Writing to {tool_input['path']}"
-            elif "file" in tool_input:
-                return f"Writing to {tool_input['file']}"
-
-        elif "list" in base_tool.lower() or "ls" in base_tool.lower():
-            if "path" in tool_input:
-                return f"Listing {tool_input['path']}"
-            else:
-                return "Listing directory"
-
-        elif "search" in base_tool.lower() or "grep" in base_tool.lower() or "find" in base_tool.lower():
-            if "query" in tool_input:
-                query = tool_input['query'][:50]  # Truncate long queries
-                if "path" in tool_input:
-                    return f"Searching '{query}' in {tool_input['path']}"
-                return f"Searching for '{query}'"
-            elif "pattern" in tool_input:
-                pattern = tool_input['pattern'][:50]
-                return f"Searching for pattern '{pattern}'"
-
-        elif "execute" in base_tool.lower() or "run" in base_tool.lower() or "command" in base_tool.lower():
-            if "command" in tool_input:
-                cmd = tool_input['command'][:50]
-                return f"Executing '{cmd}'"
-
-        elif "scan" in base_tool.lower():
-            if "host" in tool_input:
-                return f"Scanning {tool_input['host']}"
-            elif "target" in tool_input:
-                return f"Scanning {tool_input['target']}"
-
-        # Agent operations
-        elif "agent" in base_tool.lower():
-            if "task" in tool_input:
-                task = tool_input['task'][:50]
-                return f"Running agent: '{task}'"
-
-        # Generic fallback: show first meaningful parameter
-        for key in ["path", "file", "query", "command", "target", "host", "task"]:
-            if key in tool_input:
-                value = str(tool_input[key])[:60]
-                return f"{base_tool}: {value}"
-
-        # Last resort: tool name + count of parameters
-        param_count = len(tool_input)
-        if param_count == 0:
-            return f"{base_tool}"
-        else:
-            return f"{base_tool} ({param_count} params)"
-
     async def _build_tools_from_mcps(self, mcp_names: List[str]) -> List[Dict]:
         """Convert MCP tool definitions to Claude tool format"""
         tools = []
@@ -515,16 +491,39 @@ class AgentRuntime:
             print(f"  📥 Fetched {len(mcp_tools)} tools from {mcp_name}")
 
             for mcp_tool in mcp_tools:
+                # Validate required MCP tool fields (fail fast)
+                if "name" not in mcp_tool:
+                    logger.warning(
+                        f"Tool from {mcp_name} missing required 'name' field, skipping",
+                        extra={"mcp": mcp_name, "tool_keys": list(mcp_tool.keys())}
+                    )
+                    continue
+
+                tool_name_mcp = mcp_tool["name"]
+
+                if "inputSchema" not in mcp_tool:
+                    logger.error(
+                        f"Tool '{tool_name_mcp}' from {mcp_name} missing required 'inputSchema' field - SKIPPING",
+                        extra={
+                            "mcp": mcp_name,
+                            "tool": tool_name_mcp,
+                            "available_keys": list(mcp_tool.keys()),
+                            "note": "MCP server not compliant with protocol - tool will not be available to agent"
+                        }
+                    )
+                    # Skip this tool entirely - cannot be called without schema
+                    continue
+
                 # Use double underscore as separator (periods not allowed by Anthropic)
-                tool_name = f"{mcp_name}__{mcp_tool['name']}"
+                tool_name = f"{mcp_name}__{tool_name_mcp}"
+
+                # Protocol boundary translation: MCP camelCase → Anthropic snake_case
+                # MCP spec uses camelCase, Anthropic API requires snake_case
                 tools.append(
                     {
                         "name": tool_name,
                         "description": f"[{mcp_name}] {mcp_tool.get('description', '')}",
-                        "input_schema": mcp_tool.get(
-                            "input_schema",  # Fixed: snake_case to match MCP server response
-                            {"type": "object", "properties": {}, "required": []},
-                        ),
+                        "input_schema": mcp_tool["inputSchema"],
                     }
                 )
 
@@ -747,46 +746,18 @@ comprehensive summary of your findings and work.
         return result
 
     async def _call_mcp(self, endpoint: str, tool: str, params: Dict) -> Dict:
-        """Make HTTP call to MCP server"""
-
+        """Make HTTP call to MCP server using MCPSessionManager"""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"{endpoint}/mcp/call_tool",
-                    json={
-                        "tool": tool,
-                        "arguments": params,
-                    },  # MCPs expect "arguments" not "params"
-                    timeout=aiohttp.ClientTimeout(
-                        total=300
-                    ),  # 5 min timeout for long-running tools
-                ) as response:
-                    if response.status == 200:
-                        return await response.json()
-                    else:
-                        error_text = await response.text()
-                        return {
-                            "error": f"MCP call failed with status {response.status}: {error_text}"
-                        }
-        except asyncio.TimeoutError:
-            return {"error": "MCP call timed out after 5 minutes"}
+            result = await self.mcp_session_manager.call_tool(endpoint, tool, params)
+            return result
         except Exception as e:
             return {"error": f"MCP call failed: {str(e)}"}
 
     async def _fetch_mcp_tools(self, endpoint: str) -> List[Dict]:
-        """Fetch tool definitions from MCP server"""
-
+        """Fetch tool definitions from MCP server using MCPSessionManager"""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"{endpoint}/mcp/list_tools",
-                    timeout=aiohttp.ClientTimeout(total=10),
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data.get("tools", [])
-                    else:
-                        return []
+            tools = await self.mcp_session_manager.list_tools(endpoint)
+            return tools
         except Exception as e:
             print(f"⚠️  Could not fetch tools from {endpoint}: {e}")
             return []

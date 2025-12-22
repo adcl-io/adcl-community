@@ -273,6 +273,81 @@ export default function PlaygroundPage() {
     return toolName;
   };
 
+  // Helper to format tool call into human-readable summary (moved from backend)
+  const formatToolCallSummary = (toolName, toolInput) => {
+    if (!toolName || typeof toolName !== 'string') return toolName;
+
+    // Extract base tool name (after MCP prefix)
+    const parts = toolName.split('__');
+    const baseTool = parts.length > 1 ? parts[1] : toolName;
+
+    // Common file operations
+    if (baseTool.toLowerCase().includes('read')) {
+      const path = toolInput?.path || toolInput?.file;
+      return path ? `Reading ${path}` : baseTool;
+    }
+
+    if (baseTool.toLowerCase().includes('write') || baseTool.toLowerCase().includes('create')) {
+      const path = toolInput?.path || toolInput?.file;
+      return path ? `Writing to ${path}` : baseTool;
+    }
+
+    if (baseTool.toLowerCase().includes('list') || baseTool.toLowerCase().includes('ls')) {
+      const path = toolInput?.path;
+      return path ? `Listing ${path}` : 'Listing directory';
+    }
+
+    if (baseTool.toLowerCase().includes('search') || baseTool.toLowerCase().includes('grep') || baseTool.toLowerCase().includes('find')) {
+      const query = toolInput?.query || toolInput?.pattern;
+      if (query) {
+        const truncatedQuery = query.length > 50 ? query.substring(0, 50) + '...' : query;
+        const path = toolInput?.path;
+        return path ? `Searching '${truncatedQuery}' in ${path}` : `Searching for '${truncatedQuery}'`;
+      }
+    }
+
+    if (baseTool.toLowerCase().includes('execute') || baseTool.toLowerCase().includes('run') || baseTool.toLowerCase().includes('command')) {
+      const cmd = toolInput?.command;
+      if (cmd) {
+        const truncatedCmd = cmd.length > 50 ? cmd.substring(0, 50) + '...' : cmd;
+        return `Executing '${truncatedCmd}'`;
+      }
+    }
+
+    if (baseTool.toLowerCase().includes('scan')) {
+      const target = toolInput?.host || toolInput?.target;
+      return target ? `Scanning ${target}` : baseTool;
+    }
+
+    if (baseTool.toLowerCase().includes('agent')) {
+      const task = toolInput?.task;
+      if (task) {
+        const truncatedTask = task.length > 50 ? task.substring(0, 50) + '...' : task;
+        return `Running agent: '${truncatedTask}'`;
+      }
+    }
+
+    // Generic fallback: show first meaningful parameter
+    const keys = ['path', 'file', 'query', 'command', 'target', 'host', 'task'];
+    for (const key of keys) {
+      if (toolInput && toolInput[key]) {
+        const value = String(toolInput[key]);
+        const truncatedValue = value.length > 60 ? value.substring(0, 60) + '...' : value;
+        return `${baseTool}: ${truncatedValue}`;
+      }
+    }
+
+    // Last resort: tool name + param count
+    const paramCount = toolInput ? Object.keys(toolInput).length : 0;
+    return paramCount === 0 ? baseTool : `${baseTool} (${paramCount} params)`;
+  };
+
+  // Helper to truncate text
+  const truncateText = (text, maxLength) => {
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
   // Helper to add agent status messages to chat
   const addAgentStatusMessage = async (content, metadata = {}) => {
     const statusMessage = {
@@ -287,8 +362,11 @@ export default function PlaygroundPage() {
     if (metadata.persist === true) {
       await appendMessage(statusMessage); // This also updates setMessages
     } else {
-      // Just update local state for transient status messages
-      setMessages(prev => [...prev, statusMessage]);
+      // For transient status messages, update streamingStatus instead of accumulating in messages
+      setStreamingStatus({
+        message: content,
+        metadata: metadata
+      });
     }
   };
 
@@ -428,17 +506,94 @@ export default function PlaygroundPage() {
             thinking_preview: data.thinking_preview,
             persist: shouldPersist
           });
-        } else if (data.type === 'tool_execution') {
-          // Real-time update for individual tool calls - don't persist, too verbose
+        } else if (data.type === 'iteration_start') {
+          // NEW: Mark when each iteration starts
           const agentName = currentAgent?.role || 'Agent';
-          const toolMessage = `${agentName} is executing:\n🔧 ${data.tool_summary}`;
+          await addAgentStatusMessage(
+            `${agentName} - Iteration ${data.iteration}/${data.max_iterations}`,
+            {
+              type: 'iteration_start',
+              iteration: data.iteration,
+              max_iterations: data.max_iterations,
+              agent_id: currentAgent.id,
+              agent_role: currentAgent.role,
+              agent_color: currentAgent.color,
+              persist: false  // Don't persist - visual progress indicator
+            }
+          );
+        } else if (data.type === 'agent_reasoning') {
+          // NEW: Show agent's thinking inline (ChatGPT-style)
+          const agentName = currentAgent?.role || 'Agent';
+          const reasoningPreview = truncateText(data.reasoning, 300);
+          await addAgentStatusMessage(
+            `💭 ${reasoningPreview}`,
+            {
+              type: 'agent_reasoning',
+              reasoning: data.reasoning,
+              reasoning_preview: reasoningPreview,
+              iteration: data.iteration,
+              agent_id: currentAgent.id,
+              agent_role: currentAgent.role,
+              agent_color: currentAgent.color,
+              persist: true  // Persist reasoning - it's valuable
+            }
+          );
+        } else if (data.type === 'tool_execution') {
+          // Real-time update for individual tool calls - show inline
+          const agentName = currentAgent?.role || 'Agent';
+          const toolSummary = formatToolCallSummary(data.tool_name, data.tool_input);
+          const toolMessage = `🔧 ${toolSummary}...`;
           await addAgentStatusMessage(toolMessage, {
             type: 'tool_execution',
             tool_name: data.tool_name,
-            tool_summary: data.tool_summary,
+            tool_summary: toolSummary,
             iteration: data.iteration,
-            persist: false  // Don't persist - too verbose, tools shown in iteration metadata
+            agent_id: currentAgent.id,
+            agent_role: currentAgent.role,
+            agent_color: currentAgent.color,
+            persist: false  // Don't persist - we'll show the result instead
           });
+        } else if (data.type === 'tool_result') {
+          // NEW: Show tool results inline (ChatGPT-style)
+          const successIcon = data.success ? '✅' : '❌';
+          const toolSummary = formatToolCallSummary(data.tool_name, data.tool_input);
+          const resultPreview = truncateText(JSON.stringify(data.result), 1000);
+          const resultMessage = data.success
+            ? `${successIcon} ${toolSummary}: completed`
+            : `${successIcon} ${toolSummary}: ${data.result?.error || 'failed'}`;
+
+          await addAgentStatusMessage(resultMessage, {
+            type: 'tool_result',
+            tool_name: data.tool_name,
+            tool_summary: toolSummary,
+            result: data.result,
+            result_preview: resultPreview,
+            success: data.success,
+            iteration: data.iteration,
+            agent_id: currentAgent.id,
+            agent_role: currentAgent.role,
+            agent_color: currentAgent.color,
+            persist: true  // Persist tool results - they're important
+          });
+        } else if (data.type === 'agent_answer') {
+          // NEW: Show agent's final answer before completion
+          const agentName = currentAgent?.role || 'Agent';
+          const answerPreview = truncateText(data.answer, 500);
+          await addAgentStatusMessage(
+            answerPreview,
+            {
+              type: 'agent_answer',
+              answer: data.answer,
+              answer_preview: answerPreview,
+              iteration: data.iteration,
+              total_iterations: data.total_iterations,
+              status: data.status,
+              agent_id: currentAgent.id,
+              agent_role: currentAgent.role,
+              agent_color: currentAgent.color,
+              persist: true  // Persist final answer
+            }
+          );
         } else if (data.type === 'agent_complete') {
           agentActivityLog.push({
             type: 'complete',
@@ -765,10 +920,24 @@ export default function PlaygroundPage() {
               const isIntermediateStatus = message.role === 'agent-status' &&
                 message.metadata &&
                 message.metadata.persist !== true &&
-                (message.metadata.type === 'agent_iteration' || message.metadata.type === 'tool_execution');
+                (message.metadata.type === 'agent_iteration' ||
+                 message.metadata.type === 'tool_execution' ||
+                 message.metadata.type === 'iteration_start');
+
+              // Special styling for reasoning (thinking) messages
+              const isThinkingMessage = message.role === 'agent-status' &&
+                message.metadata?.type === 'agent_reasoning';
+
+              // Special styling for tool results
+              const isToolResult = message.role === 'agent-status' &&
+                message.metadata?.type === 'tool_result';
+
+              // Special styling for final answers
+              const isFinalAnswer = message.role === 'agent-status' &&
+                message.metadata?.type === 'agent_answer';
 
               return (
-              <div key={message.id} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} ${isIntermediateStatus ? 'opacity-80' : ''}`}>
+              <div key={message.id} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} ${isIntermediateStatus ? 'opacity-70' : ''}`}>
                 {message.role !== 'user' && (
                   <div className="flex-shrink-0">
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
@@ -792,23 +961,86 @@ export default function PlaygroundPage() {
 
                 <div className={`flex-1 max-w-2xl ${message.role === 'user' ? 'flex justify-end' : ''}`}>
                   <div
-                    className={`${isIntermediateStatus ? 'rounded-lg px-3 py-1.5' : 'rounded-2xl px-4 py-3'} border ${
+                    className={`${
+                      isIntermediateStatus
+                        ? 'rounded-lg px-3 py-1.5'
+                        : isThinkingMessage
+                        ? 'rounded-xl px-4 py-2.5 border-l-4'
+                        : isFinalAnswer
+                        ? 'rounded-xl px-4 py-3 ring-2 ring-offset-2'
+                        : 'rounded-2xl px-4 py-3'
+                    } border ${
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : message.role === 'error'
                         ? 'bg-destructive/10 border-destructive text-destructive'
+                        : isThinkingMessage
+                        ? 'bg-muted/30 border-muted border-l-blue-500 dark:border-l-blue-400'
+                        : isFinalAnswer
+                        ? 'bg-green-500/5 border-green-500/30 ring-green-500/20 text-green-700 dark:text-green-300'
+                        : isToolResult
+                        ? message.metadata?.success
+                          ? 'bg-green-500/5 border-green-500/20 text-green-700 dark:text-green-300'
+                          : 'bg-red-500/5 border-red-500/20 text-red-700 dark:text-red-300'
                         : message.role === 'agent-status'
                         ? agentColor.bubble
                         : 'bg-muted border-transparent'
                     }`}
                   >
-                    <div className={`whitespace-pre-wrap ${isIntermediateStatus ? 'text-xs' : 'text-sm'}`}>{message.content}</div>
+                    <div className={`whitespace-pre-wrap ${
+                      isIntermediateStatus ? 'text-xs' : isThinkingMessage ? 'text-sm italic' : 'text-sm'
+                    }`}>{message.content}</div>
 
                     {/* Only show details for important messages, not intermediate status */}
                     {!isIntermediateStatus && (
                       <>
-                        {/* Thinking content - collapsed by default */}
-                        {message.role === 'agent-status' && message.metadata?.thinking && (
+                        {/* Full reasoning for thinking messages - collapsed by default */}
+                        {isThinkingMessage && message.metadata?.reasoning && (
+                          <Collapsible className="mt-2">
+                            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-muted-foreground pt-2 border-t border-current/10 w-full">
+                              <ChevronDown className="h-3 w-3" />
+                              <span>View full reasoning</span>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="mt-2 text-xs text-muted-foreground/80 whitespace-pre-wrap font-mono">
+                                {message.metadata.reasoning}
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        )}
+
+                        {/* Full answer for final answer messages - collapsed by default */}
+                        {isFinalAnswer && message.metadata?.answer && message.metadata.answer !== message.content && (
+                          <Collapsible className="mt-2">
+                            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-muted-foreground pt-2 border-t border-current/10 w-full">
+                              <ChevronDown className="h-3 w-3" />
+                              <span>View full answer</span>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="mt-2 text-sm whitespace-pre-wrap">
+                                {message.metadata.answer}
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        )}
+
+                        {/* Tool result details - collapsed by default */}
+                        {isToolResult && message.metadata?.result_preview && (
+                          <Collapsible className="mt-2">
+                            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-muted-foreground pt-2 border-t border-current/10 w-full">
+                              <ChevronDown className="h-3 w-3" />
+                              <span>View tool output</span>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="mt-2 text-xs text-muted-foreground/80 whitespace-pre-wrap font-mono">
+                                {message.metadata.result_preview}
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        )}
+
+                        {/* Legacy thinking content - collapsed by default */}
+                        {!isThinkingMessage && message.role === 'agent-status' && message.metadata?.thinking && (
                           <Collapsible className="mt-2">
                             <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-muted-foreground pt-2 border-t border-current/10 w-full">
                               <ChevronDown className="h-3 w-3" />
