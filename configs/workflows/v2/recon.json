@@ -1,0 +1,29 @@
+{
+  "workflow_id": "recon",
+  "name": "Reconnaissance",
+  "description": "Stage 1: Fast multi-method host discovery using masscan, arp-scan, and ping sweep to identify alive hosts on the network.",
+  "nodes": [
+    {
+      "node_id": "recon",
+      "agent_id": "recon-agent",
+      "timeout": 300,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

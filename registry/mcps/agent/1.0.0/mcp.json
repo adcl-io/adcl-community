@@ -1,0 +1,64 @@
+{
+  "name": "agent",
+  "version": "1.0.0",
+  "description": "AI Agent with think/code/review capabilities",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": "./mcp_servers",
+      "dockerfile": "Dockerfile.agent"
+    },
+    "image": "mcp-agent:1.0.0",
+    "container_name": "mcp-agent",
+    "ports": [
+      {
+        "host": "${AGENT_PORT:-7000}",
+        "container": "${AGENT_PORT:-7000}"
+      }
+    ],
+    "volumes": [
+      {
+        "host": "./logs/agent",
+        "container": "/app/logs"
+      }
+    ],
+    "environment": {
+      "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY:-}",
+      "PYTHONUNBUFFERED": "1",
+      "AGENT_PORT": "${AGENT_PORT:-7000}",
+      "LOG_DIR": "/app/logs"
+    },
+    "networks": [
+      "mcp-network"
+    ],
+    "restart": "unless-stopped"
+  },
+  "requirements": {
+    "api_keys": [
+      "ANTHROPIC_API_KEY"
+    ],
+    "min_memory": "512M",
+    "min_cpu": "0.5"
+  },
+  "tools": [
+    {
+      "name": "think",
+      "description": "Reasoning and analysis tool"
+    },
+    {
+      "name": "code",
+      "description": "Code generation and analysis"
+    },
+    {
+      "name": "review",
+      "description": "Code review capabilities"
+    }
+  ],
+  "tags": [
+    "ai",
+    "reasoning",
+    "code"
+  ],
+  "author": "MCP Platform Team",
+  "license": "MIT"
+}

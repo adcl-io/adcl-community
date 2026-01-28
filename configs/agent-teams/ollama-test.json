@@ -1,0 +1,25 @@
+{
+  "name": "ollama test",
+  "description": "",
+  "version": "1.0.0",
+  "available_mcps": [
+    "agent",
+    "nmap_recon",
+    "file_tools",
+    "history"
+  ],
+  "agents": [
+    {
+      "agent_id": "new-agent-2",
+      "role": "test",
+      "responsibilities": [],
+      "mcp_access": []
+    }
+  ],
+  "coordination": {
+    "mode": "sequential",
+    "share_context": true
+  },
+  "tags": [],
+  "author": "User"
+}

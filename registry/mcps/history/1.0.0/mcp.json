@@ -1,0 +1,67 @@
+{
+  "name": "history",
+  "version": "1.0.0",
+  "description": "Conversation history tracking and search",
+  "type": "mcp",
+  "deployment": {
+    "build": {
+      "context": "./mcp_servers/history",
+      "dockerfile": "Dockerfile"
+    },
+    "image": "mcp-history:1.0.0",
+    "container_name": "mcp-history",
+    "ports": [
+      {
+        "host": "${HISTORY_PORT:-7004}",
+        "container": "7004"
+      }
+    ],
+    "volumes": [
+      {
+        "host": "./logs/history",
+        "container": "/app/logs"
+      },
+      {
+        "host": "./volumes/history",
+        "container": "/app/data"
+      }
+    ],
+    "environment": {
+      "PYTHONUNBUFFERED": "1",
+      "HISTORY_PORT": "7004",
+      "LOG_DIR": "/app/logs",
+      "DATA_DIR": "/app/data"
+    },
+    "restart": "unless-stopped"
+  },
+  "dependencies": {
+    "mcps": [],
+    "agents": []
+  },
+  "compatibility": {
+    "min_adcl_version": "0.5.0",
+    "python_version": ">=3.11",
+    "os_requirements": ["linux"]
+  },
+  "requirements": {
+    "min_memory": "256M",
+    "min_cpu": "0.25"
+  },
+  "tools": [
+    {
+      "name": "store_message",
+      "description": "Store conversation message"
+    },
+    {
+      "name": "search_history",
+      "description": "Search conversation history"
+    },
+    {
+      "name": "get_session",
+      "description": "Get session history"
+    }
+  ],
+  "tags": ["history", "storage", "search"],
+  "author": "MCP Platform Team",
+  "license": "MIT"
+}

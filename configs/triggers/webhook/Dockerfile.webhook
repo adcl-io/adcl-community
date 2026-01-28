@@ -1,0 +1,20 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy trigger code
+COPY webhook_trigger.py .
+
+# Expose port
+EXPOSE 8100
+
+# Health check to ensure webhook server is responding
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
+    CMD curl -f http://localhost:8100/health || exit 1
+
+# Run trigger
+CMD ["uvicorn", "webhook_trigger:app", "--host", "0.0.0.0", "--port", "8100"]

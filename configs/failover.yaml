@@ -1,0 +1,37 @@
+# Registry Failover Configuration
+# Controls retry logic, health monitoring, and circuit breaker behavior
+
+# Retry Configuration
+retry:
+  max_retries: 3                # Maximum retry attempts per registry
+  retry_delay: 1.0              # Initial delay between retries (seconds)
+  max_retry_delay: 30.0         # Maximum delay between retries (seconds)
+  backoff_multiplier: 2.0       # Exponential backoff multiplier
+
+# Health Monitoring
+health:
+  check_interval: 60            # Health check interval (seconds)
+  timeout: 30.0                 # Request timeout (seconds)
+  
+# Circuit Breaker Configuration
+circuit_breaker:
+  failure_threshold: 5          # Failures before opening circuit breaker
+  reset_time: 300              # Time before attempting to reset (seconds)
+  
+# Performance Thresholds
+performance:
+  healthy_response_time: 2.0    # Response time for "healthy" status (seconds)
+  degraded_response_time: 10.0  # Response time for "degraded" status (seconds)
+  
+# Logging Configuration
+logging:
+  enable_metrics_logging: true  # Log performance metrics
+  enable_failover_logging: true # Log failover events
+  log_level: "INFO"            # Log level for failover events
+
+# Advanced Settings
+advanced:
+  enable_circuit_breaker: true  # Enable/disable circuit breaker functionality
+  enable_health_checks: true    # Enable/disable automatic health checks
+  parallel_requests: false      # Execute registry requests in parallel
+  cache_health_results: true    # Cache health check results

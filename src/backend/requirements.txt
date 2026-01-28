@@ -1,0 +1,25 @@
+fastapi==0.128.0
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic==2.10.6
+pydantic-settings==2.7.1
+httpx==0.28.1
+aiohttp==3.13.3
+aiofiles==25.1.0
+python-dotenv==1.0.1
+anthropic==0.76.0
+openai==1.59.7
+tiktoken>=0.8.0
+pyyaml==6.0.2
+jsonschema==4.23.0
+tomli-w==1.1.0
+packaging==24.2
+docker==7.1.0
+requests==2.32.4
+urllib3==2.6.3
+starlette==0.49.1
+
+# Testing dependencies
+pytest==8.3.5
+pytest-asyncio==0.25.2
+hypothesis==6.151.2

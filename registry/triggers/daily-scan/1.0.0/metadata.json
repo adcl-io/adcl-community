@@ -1,0 +1,12 @@
+{
+  "type": "trigger",
+  "name": "daily-scan",
+  "version": "1.0.0",
+  "publisher": "adcl-io",
+  "description": "Cron-based schedule trigger for executing workflows at configured times",
+  "checksums": {
+    "sha256": "",
+    "md5": ""
+  },
+  "published_at": "2025-10-25T05:00:00Z"
+}

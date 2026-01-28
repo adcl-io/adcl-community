@@ -1,0 +1,37 @@
+{
+  "workflow_id": "fast-recon",
+  "name": "Fast Reconnaissance",
+  "description": "Quick service discovery without slow scans. Uses AI-powered fast recon agent.",
+  "version": "2.0",
+
+  "nodes": [
+    {
+      "node_id": "recon",
+      "node_type": "agent",
+      "config": {
+        "agent_id": "fast-recon-agent",
+        "timeout": 600
+      },
+      "label": "Fast Reconnaissance",
+      "description": "Quick port and service discovery (< 60s)",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 220,
+        "height": 160
+      }
+    }
+  ],
+
+  "edges": [],
+
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

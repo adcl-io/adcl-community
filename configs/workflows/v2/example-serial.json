@@ -1,0 +1,70 @@
+{
+  "workflow_id": "example-serial",
+  "name": "Serial Workflow Example",
+  "description": "Demonstrates serial execution: A \u2192 B \u2192 C",
+  "nodes": [
+    {
+      "node_id": "analyze",
+      "agent_id": "security-analyst",
+      "timeout": 300,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "review",
+      "agent_id": "code-reviewer",
+      "timeout": 300,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "report",
+      "agent_id": "research-assistant",
+      "timeout": 300,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "analyze",
+      "to": "review",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "review",
+      "to": "report",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

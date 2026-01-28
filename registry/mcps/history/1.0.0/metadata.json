@@ -1,0 +1,17 @@
+{
+  "package_type": "mcp",
+  "name": "history",
+  "version": "1.0.0",
+  "created_at": "2025-01-27T03:11:00.000000",
+  "publisher": "ADCL",
+  "description": "Conversation history tracking and search",
+  "checksum": {
+    "sha256": "",
+    "md5": ""
+  },
+  "signature": {
+    "signed": false,
+    "signer": null,
+    "timestamp": null
+  }
+}

@@ -1,0 +1,29 @@
+# Workflow System Configuration
+# Following ADCL principle: "Configuration is Code"
+# All paths configurable, no hardcoded values
+
+workflows:
+  # Workflow storage directories
+  base_dir: /app/workflows
+  templates_dir: /app/workflows/templates
+  custom_dir: /app/workflows/custom
+  executions_dir: /app/workflows/executions
+  triggers_dir: /app/workflows/triggers
+
+logging:
+  # Workflow execution logs
+  base_dir: /workspace/logs/workflows
+  format: json
+  rotation: daily
+
+execution:
+  # Execution defaults
+  max_parallel_nodes: 10
+  default_timeout: 300  # seconds
+  max_retries: 3
+
+engine:
+  # WorkflowEngine settings
+  enable_persistent_logging: true
+  enable_execution_history: true
+  websocket_updates: true

@@ -1,0 +1,90 @@
+{
+  "workflow_id": "code-review-workflow",
+  "name": "Code Review Workflow",
+  "description": "Generate code and have it reviewed by the agent",
+  "nodes": [
+    {
+      "node_id": "generate-code",
+      "agent_id": "code-reviewer",
+      "timeout": 3600,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "review-code",
+      "agent_id": "code-reviewer",
+      "timeout": 3600,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "save-code",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "save-review",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 100,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "generate-code",
+      "to": "review-code",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "generate-code",
+      "to": "save-code",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "review-code",
+      "to": "save-review",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}
