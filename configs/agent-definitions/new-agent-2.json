@@ -1,0 +1,26 @@
+{
+  "name": "ollama-test",
+  "description": "A new autonomous agent",
+  "persona": {
+    "role": "General Purpose Agent",
+    "expertise": [],
+    "behavior": "Simple agent to test if LLM is working",
+    "system_prompt": "Quick llm tests to see if working"
+  },
+  "available_mcps": [],
+  "capabilities": {
+    "autonomous": true,
+    "max_iterations": 10,
+    "can_loop": true,
+    "requires_approval": false
+  },
+  "model_config": {
+    "model": "gemma3-abliterated-27b",
+    "temperature": 0.7,
+    "max_tokens": 4096
+  },
+  "tags": [],
+  "author": "",
+  "version": "1.0.0",
+  "id": "new-agent-2"
+}

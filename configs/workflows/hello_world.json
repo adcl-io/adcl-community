@@ -1,0 +1,45 @@
+{
+  "name": "Hello World Workflow",
+  "description": "Simple workflow demonstrating agent and file tool interaction",
+  "nodes": [
+    {
+      "id": "agent-think",
+      "type": "mcp_call",
+      "mcp_server": "agent",
+      "tool": "think",
+      "params": {
+        "prompt": "What is a good greeting message for a new MCP agent platform?"
+      }
+    },
+    {
+      "id": "agent-code",
+      "type": "mcp_call",
+      "mcp_server": "agent",
+      "tool": "code",
+      "params": {
+        "spec": "Write a Python function that prints a welcome message for the MCP Agent Platform",
+        "language": "python"
+      }
+    },
+    {
+      "id": "file-write",
+      "type": "mcp_call",
+      "mcp_server": "file_tools",
+      "tool": "write_file",
+      "params": {
+        "path": "hello.py",
+        "content": "${agent-code.code}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "agent-think",
+      "target": "agent-code"
+    },
+    {
+      "source": "agent-code",
+      "target": "file-write"
+    }
+  ]
+}

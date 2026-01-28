@@ -1,0 +1,29 @@
+{
+  "workflow_id": "deep-scan",
+  "name": "Deep Port Scan",
+  "description": "Detailed port and service scanning using nmap. Identifies open ports, service versions, and OS detection on target host.",
+  "nodes": [
+    {
+      "node_id": "deep-scan",
+      "agent_id": "recon-agent",
+      "timeout": 300,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

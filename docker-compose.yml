@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # FastAPI Orchestrator
+  orchestrator:
+    image: adcl/backend:0.1.30-community
+    ports:
+      - "${ORCHESTRATOR_PORT:-8000}:8000"
+    volumes:
+      # Configuration mounts only (no source code)
+      - ${WORKFLOWS_PATH:-./configs/workflows}:/app/workflows
+      - ${AGENT_TEAMS_PATH:-./configs/agent-teams}:/app/agent-teams
+      - ${AGENT_DEFINITIONS_PATH:-./configs/agent-definitions}:/app/agent-definitions
+      - ${CONFIGS_PATH:-./configs}:/configs  # Configuration files (ADCL: Configuration is Code)
+      - ${TRIGGERS_PATH:-./configs/triggers}:/app/triggers  # Trigger configurations
+      # Runtime data mounts
+      - ${LOGS_PATH:-./var/logs}/orchestrator:/app/logs
+      - ${LOGS_PATH:-./var/logs}:/app/logs_shared  # Shared logs directory
+      - ${WORKSPACE_PATH:-./var/workspace}:/app/workspace_shared  # Shared workspace
+      - ${VOLUMES_PATH:-./var/volumes}:/app/volumes  # Persistent data for scans, recon, etc.
+      # Docker socket for container management
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: ${ORCHESTRATOR_USER:-root}  # Required for Docker socket access
+    environment:
+      - APP_BASE_DIR=/app
+      - ADCL_CONFIG_DIR=/app/workspace_shared/user-config
+      - ADCL_SYSTEM_CONFIG_DIR=/configs
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
+      - AGENT_PORT=${AGENT_PORT:-7000}
+      - FILE_TOOLS_PORT=${FILE_TOOLS_PORT:-7002}
+      - NMAP_PORT=${NMAP_PORT:-7003}
+      - KALI_PORT=${KALI_PORT:-7005}
+      - LOG_DIR=/app/logs
+      - DEFAULT_SCAN_NETWORK=${DEFAULT_SCAN_NETWORK:-192.168.50.0/24}
+      - DEFAULT_SCAN_TARGET=${DEFAULT_SCAN_TARGET:-192.168.50.1}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY:-}
+      - LINEAR_CLIENT_ID=${LINEAR_CLIENT_ID:-}
+      - LINEAR_CLIENT_SECRET=${LINEAR_CLIENT_SECRET:-}
+      - LINEAR_WEBHOOK_SECRET=${LINEAR_WEBHOOK_SECRET:-}
+      - LINEAR_PORT=${LINEAR_PORT:-7005}
+      - ALLOWED_SCAN_NETWORKS=${ALLOWED_SCAN_NETWORKS}
+      # Auto-install default MCPs on startup
+      - AUTO_INSTALL_MCPS=${AUTO_INSTALL_MCPS}
+      # Production mode flag
+      - ADCL_MODE=production
+    # Allow orchestrator to reach host machine where nmap runs (host network mode)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - mcp-network
+      - vulhub-network
+    depends_on:
+      - registry
+
+  # React Frontend
+  frontend:
+    image: ghcr.io/adcl/frontend:latest
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - ${LOGS_PATH:-./var/logs}/frontend:/app/logs
+    environment:
+      - VITE_API_URL=${API_PROTOCOL:-http}://${API_HOST:-localhost}:${ORCHESTRATOR_PORT:-8000}
+      - VITE_EDITION=pro
+      - LOG_DIR=/app/logs
+      - ADCL_MODE=production
+    networks:
+      - mcp-network
+    depends_on:
+      - orchestrator
+
+  # Registry Server
+  registry:
+    image: ghcr.io/adcl/registry:latest
+    ports:
+      - "${REGISTRY_PORT:-9000}:9000"
+    volumes:
+      # Configuration and data only (no source code)
+      - ${REGISTRY_PATH:-./registry}:/app/registry
+    environment:
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
+      - ADCL_MODE=production
+      - CONTAINER_REGISTRY_DATA_PATH=/app/registry
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge
+
+  vulhub-network:
+    external: true  # Created by VulhubManager backend service

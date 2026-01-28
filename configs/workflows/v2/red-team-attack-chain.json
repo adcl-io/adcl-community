@@ -1,0 +1,94 @@
+{
+  "workflow_id": "red-team-attack-chain",
+  "name": "Full Red Team Attack Chain",
+  "description": "Complete pentesting workflow: Recon \u2192 Discovery \u2192 Vulnerability Analysis \u2192 Exploitation. Follows standard pentesting methodology.",
+  "nodes": [
+    {
+      "node_id": "recon",
+      "agent_id": "recon-agent",
+      "timeout": 300,
+      "description": "Stage 1: Fast host discovery (ping sweep, masscan, arp scan)",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "discovery",
+      "agent_id": "scanner-agent",
+      "timeout": 300,
+      "description": "Stage 2: Detailed port and service scanning (nmap)",
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "vuln-analysis",
+      "agent_id": "vuln-analyzer-agent",
+      "timeout": 400,
+      "description": "Stage 3: Vulnerability identification and analysis",
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "exploit-validation",
+      "agent_id": "exploit-validator-agent",
+      "timeout": 500,
+      "description": "Stage 4: Proof-of-concept exploitation",
+      "position": {
+        "x": 100,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "recon",
+      "to": "discovery",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "discovery",
+      "to": "vuln-analysis",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "vuln-analysis",
+      "to": "exploit-validation",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

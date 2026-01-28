@@ -1,0 +1,12 @@
+{
+  "type": "trigger",
+  "name": "github-pr-webhook",
+  "version": "1.0.0",
+  "publisher": "adcl-io",
+  "description": "GitHub webhook trigger with HMAC signature verification for PR events",
+  "checksums": {
+    "sha256": "",
+    "md5": ""
+  },
+  "published_at": "2025-10-25T05:00:00Z"
+}

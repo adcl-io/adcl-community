@@ -1,0 +1,28 @@
+# File Tools MCP Server Configuration
+# File system operations (read, write, list, search)
+
+service:
+  name: "file_tools"
+  port: 7002
+  host: "0.0.0.0"
+  description: "File system operations MCP server"
+
+# Workspace Configuration
+workspace:
+  default_path: "/workspace"
+  # Security: Restrict operations to workspace directory
+  restrict_to_workspace: true
+
+  # File operation limits
+  max_file_size_mb: 100
+  max_search_results: 1000
+
+# Container Configuration (for deployment)
+deployment:
+  container_name: "mcp-file-tools"
+  network_mode: "bridge"
+  restart_policy: "unless-stopped"
+
+  # Volume mounts for workspace access
+  volumes:
+    - "./workspace:/workspace"

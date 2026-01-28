@@ -1,0 +1,90 @@
+{
+  "workflow_id": "network-reconnaissance-workflow",
+  "name": "Network Reconnaissance Workflow",
+  "description": "Perform network reconnaissance using Nmap and analyze results with AI agent",
+  "nodes": [
+    {
+      "node_id": "port-scan",
+      "agent_id": "network-scanner",
+      "timeout": 3600,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "service-detection",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "analyze-results",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "save-report",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 100,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "port-scan",
+      "to": "service-detection",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "service-detection",
+      "to": "analyze-results",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "analyze-results",
+      "to": "save-report",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

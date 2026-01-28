@@ -1,0 +1,99 @@
+{
+  "workflow_id": "example-parallel",
+  "name": "Parallel Workflow Example",
+  "description": "Demonstrates parallel execution: A \u2192 [B, C] \u2192 D",
+  "nodes": [
+    {
+      "node_id": "start",
+      "agent_id": "research-assistant",
+      "timeout": 300,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "security-check",
+      "agent_id": "security-analyst",
+      "branch_name": "security",
+      "timeout": 300,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "code-check",
+      "agent_id": "code-reviewer",
+      "branch_name": "code",
+      "timeout": 300,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "converge",
+      "agent_id": "research-assistant",
+      "timeout": 300,
+      "position": {
+        "x": 100,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "start",
+      "to": "security-check",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "start",
+      "to": "code-check",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "security-check",
+      "to": "converge",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "code-check",
+      "to": "converge",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "workflow_id": "vulhub-attack",
+  "name": "Vulhub CVE Exploitation Chain",
+  "description": "Automated Recon → Analyze → Exploit workflow for Vulhub targets. Discovers services, correlates CVEs, and executes exploits.",
+  "version": "2.0",
+
+  "nodes": [
+    {
+      "node_id": "recon",
+      "node_type": "agent",
+      "config": {
+        "agent_id": "fast-recon-agent",
+        "timeout": 600
+      },
+      "label": "Reconnaissance",
+      "description": "Fast host discovery and service enumeration using nmap",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 220,
+        "height": 160
+      }
+    },
+
+    {
+      "node_id": "analyze",
+      "node_type": "agent",
+      "config": {
+        "agent_id": "cve-analyzer-agent",
+        "timeout": 600
+      },
+      "label": "Vulnerability Analysis",
+      "description": "CVE correlation and exploit selection",
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 220,
+        "height": 160
+      }
+    },
+
+    {
+      "node_id": "exploit",
+      "node_type": "agent",
+      "config": {
+        "agent_id": "smart-exploit-agent",
+        "timeout": 900
+      },
+      "label": "Exploitation",
+      "description": "Execute exploit and verify access",
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 220,
+        "height": 160
+      }
+    }
+  ],
+
+  "edges": [
+    {
+      "from": "recon",
+      "to": "analyze",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "analyze",
+      "to": "exploit",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

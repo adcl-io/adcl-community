@@ -1,0 +1,119 @@
+{
+  "workflow_id": "spa-sqli-integration",
+  "name": "SPA Discovery + SQLI Integration",
+  "description": "End-to-end attack chain: SPA discovery, URL filtering, parallel SQLI testing, result aggregation",
+  "nodes": [
+    {
+      "node_id": "discovery",
+      "agent_id": "spa-discovery-agent",
+      "timeout": 1800,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "filter",
+      "agent_id": "url-filter-agent",
+      "timeout": 600,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "sqli-api",
+      "agent_id": "sqli-api-agent",
+      "branch_name": "api_results",
+      "timeout": 1800,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "sqli-form",
+      "agent_id": "sqli-form-agent",
+      "branch_name": "form_results",
+      "timeout": 1800,
+      "position": {
+        "x": 100,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "aggregate",
+      "agent_id": "result-aggregator",
+      "timeout": 600,
+      "position": {
+        "x": 400,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "discovery",
+      "to": "filter",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "filter",
+      "to": "sqli-api",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "filter",
+      "to": "sqli-form",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "sqli-api",
+      "to": "aggregate",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "sqli-form",
+      "to": "aggregate",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

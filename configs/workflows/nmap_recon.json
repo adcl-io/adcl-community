@@ -1,0 +1,58 @@
+{
+  "name": "Network Reconnaissance Workflow",
+  "description": "Perform network reconnaissance using Nmap and analyze results with AI agent",
+  "nodes": [
+    {
+      "id": "port-scan",
+      "type": "mcp_call",
+      "mcp_server": "nmap_recon",
+      "tool": "port_scan",
+      "params": {
+        "target": "${env:DEFAULT_SCAN_NETWORK}",
+        "scan_type": "quick"
+      }
+    },
+    {
+      "id": "service-detection",
+      "type": "mcp_call",
+      "mcp_server": "nmap_recon",
+      "tool": "service_detection",
+      "params": {
+        "target": "${env:DEFAULT_SCAN_TARGET}"
+      }
+    },
+    {
+      "id": "analyze-results",
+      "type": "mcp_call",
+      "mcp_server": "agent",
+      "tool": "think",
+      "params": {
+        "prompt": "Analyze these network scan results and provide a security assessment:\n\nPort Scan: ${port-scan}\n\nService Detection: ${service-detection}\n\nProvide: 1) Summary of discovered services, 2) Potential security concerns, 3) Recommended next steps"
+      }
+    },
+    {
+      "id": "save-report",
+      "type": "mcp_call",
+      "mcp_server": "file_tools",
+      "tool": "write_file",
+      "params": {
+        "path": "recon_report.txt",
+        "content": "=== NETWORK RECONNAISSANCE REPORT ===\n\n## Port Scan Results\n${port-scan}\n\n## Service Detection Results\n${service-detection}\n\n## AI Analysis\n${analyze-results.reasoning}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "port-scan",
+      "target": "service-detection"
+    },
+    {
+      "source": "service-detection",
+      "target": "analyze-results"
+    },
+    {
+      "source": "analyze-results",
+      "target": "save-report"
+    }
+  ]
+}

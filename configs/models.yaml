@@ -1,0 +1,433 @@
+models:
+- id: claude-sonnet-4-5
+  name: Claude Sonnet 4.5
+  provider: anthropic
+  model_id: claude-sonnet-4-5-20250929
+  temperature: 0.7
+  max_tokens: 8192
+  description: Most intelligent model - best for complex tasks
+  is_default: true
+  api_key_env: ANTHROPIC_API_KEY
+  capabilities:
+    function_calling: native
+    vision: true
+    code_generation: true
+    reasoning: advanced
+    multimodal: true
+  safety_level: moderate
+  mcp_compatibility:
+    reliability_score: 4.8
+    tested_categories:
+    - file_ops
+    - web_scraping
+    - data_analysis
+    success_rates:
+      file_ops:
+        success_rate: 0.98
+        avg_response_time: 850
+        last_tested: '2025-01-09T08:00:00Z'
+      web_scraping:
+        success_rate: 0.95
+        avg_response_time: 1200
+        last_tested: '2025-01-09T08:00:00Z'
+      data_analysis:
+        success_rate: 0.97
+        avg_response_time: 2100
+        last_tested: '2025-01-09T08:00:00Z'
+  ratings:
+    speed: 4.2
+    quality: 4.9
+    cost_effectiveness: 3.8
+    reliability: 4.7
+    safety: 4.5
+    mcp_compatibility: 4.8
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 88.7
+    humaneval: 92.3
+    hellaswag: 95.6
+    last_updated: '2025-01-09T10:30:00Z'
+- id: claude-sonnet-4
+  name: Claude Sonnet 4
+  provider: anthropic
+  model_id: claude-sonnet-4-20250514
+  temperature: 0.7
+  max_tokens: 8192
+  description: Balanced intelligence and speed
+  is_default: false
+  api_key_env: ANTHROPIC_API_KEY
+  capabilities:
+    function_calling: native
+    vision: false
+    code_generation: true
+    reasoning: advanced
+    multimodal: false
+  safety_level: moderate
+  mcp_compatibility:
+    reliability_score: 4.6
+    tested_categories:
+    - file_ops
+    - web_scraping
+    success_rates:
+      file_ops:
+        success_rate: 0.96
+        avg_response_time: 900
+        last_tested: '2025-01-09T08:00:00Z'
+      web_scraping:
+        success_rate: 0.93
+        avg_response_time: 1300
+        last_tested: '2025-01-09T08:00:00Z'
+  ratings:
+    speed: 4.5
+    quality: 4.6
+    cost_effectiveness: 4.2
+    reliability: 4.5
+    safety: 4.5
+    mcp_compatibility: 4.6
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 85.2
+    humaneval: 89.1
+    hellaswag: 93.4
+    last_updated: '2025-01-09T10:30:00Z'
+- id: claude-opus-4
+  name: Claude Opus 4
+  provider: anthropic
+  model_id: claude-opus-4-20250514
+  temperature: 0.7
+  max_tokens: 8192
+  description: Highest capability model for the most complex tasks
+  is_default: false
+  api_key_env: ANTHROPIC_API_KEY
+  capabilities:
+    function_calling: native
+    vision: true
+    code_generation: true
+    reasoning: expert
+    multimodal: true
+  safety_level: moderate
+  mcp_compatibility:
+    reliability_score: 4.9
+    tested_categories:
+    - file_ops
+    - web_scraping
+    - data_analysis
+    - code_execution
+    success_rates:
+      file_ops:
+        success_rate: 0.99
+        avg_response_time: 800
+        last_tested: '2025-01-09T08:00:00Z'
+      web_scraping:
+        success_rate: 0.97
+        avg_response_time: 1100
+        last_tested: '2025-01-09T08:00:00Z'
+      data_analysis:
+        success_rate: 0.98
+        avg_response_time: 2000
+        last_tested: '2025-01-09T08:00:00Z'
+      code_execution:
+        success_rate: 0.96
+        avg_response_time: 1500
+        last_tested: '2025-01-09T08:00:00Z'
+  ratings:
+    speed: 3.8
+    quality: 5.0
+    cost_effectiveness: 3.2
+    reliability: 4.9
+    safety: 4.5
+    mcp_compatibility: 4.9
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 92.1
+    humaneval: 95.7
+    hellaswag: 97.2
+    last_updated: '2025-01-09T10:30:00Z'
+- id: claude-haiku-4-5
+  name: Claude Haiku 4.5
+  provider: anthropic
+  model_id: claude-haiku-4-5-20251001
+  temperature: 0.7
+  max_tokens: 8192
+  description: Fastest, most cost-efficient model - matches Sonnet 4 on agent tasks
+  is_default: false
+  api_key_env: ANTHROPIC_API_KEY
+  capabilities:
+    function_calling: native
+    vision: false
+    code_generation: true
+    reasoning: advanced
+    multimodal: false
+  safety_level: moderate
+  mcp_compatibility:
+    reliability_score: 4.4
+    tested_categories:
+    - file_ops
+    - web_scraping
+    success_rates:
+      file_ops:
+        success_rate: 0.94
+        avg_response_time: 600
+        last_tested: '2025-01-09T08:00:00Z'
+      web_scraping:
+        success_rate: 0.91
+        avg_response_time: 800
+        last_tested: '2025-01-09T08:00:00Z'
+  ratings:
+    speed: 4.9
+    quality: 4.3
+    cost_effectiveness: 4.8
+    reliability: 4.4
+    safety: 4.5
+    mcp_compatibility: 4.4
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 82.5
+    humaneval: 86.3
+    hellaswag: 91.8
+    last_updated: '2025-01-09T10:30:00Z'
+- id: gpt-4-turbo
+  name: GPT-4 Turbo
+  provider: openai
+  model_id: gpt-4-turbo-preview
+  temperature: 0.7
+  max_tokens: 4096
+  description: Latest GPT-4 with improved capabilities
+  is_default: false
+  api_key_env: OPENAI_API_KEY
+  capabilities:
+    function_calling: native
+    vision: true
+    code_generation: true
+    reasoning: advanced
+    multimodal: true
+  safety_level: moderate
+  mcp_compatibility:
+    reliability_score: 4.3
+    tested_categories:
+    - file_ops
+    - web_scraping
+    - data_analysis
+    success_rates:
+      file_ops:
+        success_rate: 0.92
+        avg_response_time: 950
+        last_tested: '2025-01-09T08:00:00Z'
+      web_scraping:
+        success_rate: 0.89
+        avg_response_time: 1400
+        last_tested: '2025-01-09T08:00:00Z'
+      data_analysis:
+        success_rate: 0.94
+        avg_response_time: 2200
+        last_tested: '2025-01-09T08:00:00Z'
+  ratings:
+    speed: 4.1
+    quality: 4.5
+    cost_effectiveness: 3.9
+    reliability: 4.3
+    safety: 4.2
+    mcp_compatibility: 4.3
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 86.4
+    humaneval: 87.2
+    hellaswag: 94.1
+    last_updated: '2025-01-09T10:30:00Z'
+- id: gpt-4
+  name: GPT-4
+  provider: openai
+  model_id: gpt-4
+  temperature: 0.7
+  max_tokens: 8192
+  description: Most capable GPT-4 model
+  is_default: false
+  api_key_env: OPENAI_API_KEY
+  capabilities:
+    function_calling: native
+    vision: false
+    code_generation: true
+    reasoning: advanced
+    multimodal: false
+  safety_level: moderate
+  mcp_compatibility:
+    reliability_score: 4.2
+    tested_categories:
+    - file_ops
+    - web_scraping
+    success_rates:
+      file_ops:
+        success_rate: 0.91
+        avg_response_time: 1000
+        last_tested: '2025-01-09T08:00:00Z'
+      web_scraping:
+        success_rate: 0.88
+        avg_response_time: 1500
+        last_tested: '2025-01-09T08:00:00Z'
+  ratings:
+    speed: 3.9
+    quality: 4.4
+    cost_effectiveness: 3.7
+    reliability: 4.2
+    safety: 4.2
+    mcp_compatibility: 4.2
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 86.4
+    humaneval: 67.0
+    hellaswag: 95.3
+    last_updated: '2025-01-09T10:30:00Z'
+- id: gpt-3-5-turbo
+  name: GPT-3.5 Turbo
+  provider: openai
+  model_id: gpt-3.5-turbo
+  temperature: 0.7
+  max_tokens: 4096
+  description: Fast and cost-effective
+  is_default: false
+  api_key_env: OPENAI_API_KEY
+  capabilities:
+    function_calling: limited
+    vision: false
+    code_generation: true
+    reasoning: basic
+    multimodal: false
+  safety_level: moderate
+  mcp_compatibility:
+    reliability_score: 3.8
+    tested_categories:
+    - file_ops
+    success_rates:
+      file_ops:
+        success_rate: 0.85
+        avg_response_time: 700
+        last_tested: '2025-01-09T08:00:00Z'
+  ratings:
+    speed: 4.7
+    quality: 3.8
+    cost_effectiveness: 4.9
+    reliability: 3.8
+    safety: 4.2
+    mcp_compatibility: 3.8
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 70.0
+    humaneval: 48.1
+    hellaswag: 85.5
+    last_updated: '2025-01-09T10:30:00Z'
+- id: gemma3-abliterated-27b
+  name: Gemma 3 Abliterated 27B
+  provider: ollama
+  model_id: huihui_ai/gemma3-abliterated:27b
+  temperature: 0.7
+  max_tokens: 4096
+  description: Uncensored Gemma 3 27B model (no function calling)
+  is_default: false
+  api_key_env: OLLAMA_API_KEY
+  capabilities:
+    function_calling: none
+    vision: false
+    code_generation: true
+    reasoning: advanced
+    multimodal: false
+  safety_level: unlocked
+  mcp_compatibility:
+    reliability_score: 2.1
+    tested_categories: []
+    success_rates: {}
+  ratings:
+    speed: 3.2
+    quality: 4.1
+    cost_effectiveness: 5.0
+    reliability: 3.5
+    safety: 1.8
+    mcp_compatibility: 2.1
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 75.2
+    humaneval: 62.8
+    hellaswag: 88.9
+    last_updated: '2025-01-09T10:30:00Z'
+- id: hermes3
+  name: Hermes 3 Llama 3.1 8B
+  provider: ollama
+  model_id: hermes3:8b
+  temperature: 0.7
+  max_tokens: 4096
+  description: Powerful function calling model - reliable tool use for red teaming
+  is_default: false
+  api_key_env: OLLAMA_API_KEY
+  capabilities:
+    function_calling: native
+    vision: false
+    code_generation: true
+    reasoning: advanced
+    multimodal: false
+  safety_level: minimal
+  mcp_compatibility:
+    reliability_score: 4.1
+    tested_categories:
+    - file_ops
+    - web_scraping
+    success_rates:
+      file_ops:
+        success_rate: 0.89
+        avg_response_time: 1200
+        last_tested: '2025-01-09T08:00:00Z'
+      web_scraping:
+        success_rate: 0.86
+        avg_response_time: 1600
+        last_tested: '2025-01-09T08:00:00Z'
+  ratings:
+    speed: 4.3
+    quality: 4.0
+    cost_effectiveness: 5.0
+    reliability: 4.1
+    safety: 3.2
+    mcp_compatibility: 4.1
+    last_updated: '2025-01-09T10:30:00Z'
+  benchmarks:
+    mmlu: 68.9
+    humaneval: 71.4
+    hellaswag: 83.2
+    last_updated: '2025-01-09T10:30:00Z'
+- id: ollama-phi3-latest
+  name: Phi3 latest
+  provider: ollama
+  model_id: phi3:latest
+  temperature: 0.7
+  max_tokens: 4096
+  description: Ollama model phi3:latest (no tool support - not for agents)
+  is_default: false
+  api_key_env: OLLAMA_API_KEY
+  capabilities:
+    function_calling: none
+    vision: false
+    code_generation: true
+    reasoning: basic
+    multimodal: false
+  safety_level: moderate
+  mcp_compatibility:
+    reliability_score: 1.0
+    tested_categories: []
+    success_rates: {}
+  ratings:
+    speed: 4.5
+    quality: 3.5
+    cost_effectiveness: 5.0
+    reliability: 3.2
+    safety: 4.0
+    mcp_compatibility: 1.0
+    last_updated: '2026-01-24T12:08:00Z'
+  created_at: '2026-01-23T05:49:22.610989'
+  last_updated: '2026-01-24T12:08:00Z'
+anthropic:
+  timeout: 60
+  max_retries: 3
+openai:
+  timeout: 60
+  max_retries: 3
+ollama:
+  base_url: http://localhost:11434
+  timeout: 120
+  max_retries: 3

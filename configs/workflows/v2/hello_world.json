@@ -1,0 +1,70 @@
+{
+  "workflow_id": "hello-world-workflow",
+  "name": "Hello World Workflow",
+  "description": "Simple workflow demonstrating agent and file tool interaction",
+  "nodes": [
+    {
+      "node_id": "agent-think",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "agent-code",
+      "agent_id": "code-reviewer",
+      "timeout": 3600,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "file-write",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "agent-think",
+      "to": "agent-code",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "agent-code",
+      "to": "file-write",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

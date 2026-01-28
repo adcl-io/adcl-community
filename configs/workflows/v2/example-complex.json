@@ -1,0 +1,147 @@
+{
+  "workflow_id": "example-complex",
+  "name": "Complex DAG Example",
+  "description": "Demonstrates complex multi-branch workflow with multiple convergence points",
+  "nodes": [
+    {
+      "node_id": "init",
+      "agent_id": "research-assistant",
+      "timeout": 300,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "security-scan",
+      "agent_id": "security-analyst",
+      "branch_name": "security",
+      "timeout": 600,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "code-review",
+      "agent_id": "code-reviewer",
+      "branch_name": "code",
+      "timeout": 600,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "sql-check",
+      "agent_id": "sqli-analyst",
+      "branch_name": "sql",
+      "timeout": 600,
+      "position": {
+        "x": 100,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "merge-findings",
+      "agent_id": "research-assistant",
+      "timeout": 300,
+      "position": {
+        "x": 400,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "final-report",
+      "agent_id": "research-assistant",
+      "timeout": 300,
+      "position": {
+        "x": 700,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "init",
+      "to": "security-scan",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "init",
+      "to": "code-review",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "init",
+      "to": "sql-check",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "security-scan",
+      "to": "merge-findings",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "code-review",
+      "to": "merge-findings",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "sql-check",
+      "to": "merge-findings",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "merge-findings",
+      "to": "final-report",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

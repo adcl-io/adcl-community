@@ -1,0 +1,470 @@
+#!/usr/bin/env python3
+"""
+ADCL - AI-Driven Command Line (Customer CLI)
+
+Production command-line interface for managing ADCL platform.
+Customers use this to start, stop, and manage their ADCL deployment.
+"""
+
+import sys
+import os
+import argparse
+import subprocess
+from pathlib import Path
+
+
+# ANSI color codes
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+
+
+def print_header(text):
+    print(f"{Colors.BOLD}{Colors.HEADER}{text}{Colors.ENDC}")
+
+
+def print_success(text):
+    print(f"{Colors.OKGREEN}✓ {text}{Colors.ENDC}")
+
+
+def print_error(text):
+    print(f"{Colors.FAIL}✗ {text}{Colors.ENDC}", file=sys.stderr)
+
+
+def print_warning(text):
+    print(f"{Colors.WARNING}⚠ {text}{Colors.ENDC}")
+
+
+def print_info(text):
+    print(f"{Colors.OKCYAN}→ {text}{Colors.ENDC}")
+
+
+# Base directory detection
+def get_base_dir():
+    """Get ADCL dist directory"""
+    return Path(__file__).parent.resolve()
+
+
+BASE_DIR = get_base_dir()
+COMPOSE_FILE = BASE_DIR / "docker-compose.yml"
+
+
+# =============================================================================
+# Service Management Commands
+# =============================================================================
+
+def cmd_start(args):
+    """Start ADCL services"""
+    print_header("Starting ADCL...")
+
+    if not COMPOSE_FILE.exists():
+        print_error(f"docker-compose.yml not found in {BASE_DIR}")
+        return 1
+
+    # Pull images first (for cloud-connected deployments)
+    if not args.no_pull:
+        print_info("Pulling latest images from registry...")
+        pull_result = subprocess.run(
+            ["docker-compose", "pull"],
+            cwd=BASE_DIR,
+            capture_output=True
+        )
+        if pull_result.returncode != 0:
+            print_warning("Could not pull images from registry (using local images)")
+
+    # Start services
+    print_info("Starting services...")
+    result = subprocess.run(
+        ["docker-compose", "up", "-d"],
+        cwd=BASE_DIR
+    )
+
+    if result.returncode == 0:
+        print("")
+        print_success("ADCL started successfully!")
+        print("")
+        print_info("Service endpoints:")
+        print("  Frontend:  http://localhost:3000")
+        print("  API:       http://localhost:8000")
+        print("  Registry:  http://localhost:9000")
+        print("")
+        print_info("Useful commands:")
+        print("  ./adcl status      Show service status")
+        print("  ./adcl logs        View logs")
+        print("  ./adcl stop        Stop services")
+
+    return result.returncode
+
+
+def cmd_stop(args):
+    """Stop ADCL services"""
+    print_header("Stopping ADCL...")
+
+    # First, remove MCP containers that might be on the network
+    print_info("Removing MCP containers...")
+    mcp_containers = subprocess.run(
+        "docker ps -a --format '{{.Names}}' | grep '^mcp-' || true",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if mcp_containers.stdout.strip():
+        for container in mcp_containers.stdout.strip().split('\n'):
+            if container:
+                subprocess.run(["docker", "rm", "-f", container], capture_output=True)
+        print_success("MCP containers removed")
+
+    # Remove vulhub containers that might be on the network
+    print_info("Removing Vulhub containers...")
+    vulhub_containers = subprocess.run(
+        "docker ps -a --format '{{.Names}}' | grep 'vulhub-' || true",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if vulhub_containers.stdout.strip():
+        for container in vulhub_containers.stdout.strip().split('\n'):
+            if container:
+                subprocess.run(["docker", "rm", "-f", container], capture_output=True)
+        print_success("Vulhub containers removed")
+
+    # Remove trigger containers that might be on the network
+    print_info("Removing Trigger containers...")
+    trigger_containers = subprocess.run(
+        "docker ps -a --format '{{.Names}}' | grep '^trigger-' || true",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if trigger_containers.stdout.strip():
+        for container in trigger_containers.stdout.strip().split('\n'):
+            if container:
+                subprocess.run(["docker", "rm", "-f", container], capture_output=True)
+        print_success("Trigger containers removed")
+
+    # Stop core services and remove network
+    print_info("Stopping core services...")
+    result = subprocess.run(
+        ["docker-compose", "down"],
+        cwd=BASE_DIR
+    )
+
+    # Also stop dist-community/ containers (may exist from previous builds)
+    # Always check for and force-remove community edition containers
+    print_info("Checking for community edition containers...")
+    community_containers = subprocess.run(
+        "docker ps -a --format '{{.Names}}' | grep 'dist-community_' || true",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if community_containers.stdout.strip():
+        print_info("Stopping community edition containers...")
+        for container in community_containers.stdout.strip().split('\n'):
+            if container:
+                subprocess.run(["docker", "rm", "-f", container], capture_output=True)
+
+    if result.returncode == 0:
+        print_success("ADCL stopped")
+
+    return result.returncode
+
+
+def cmd_restart(args):
+    """Restart ADCL services"""
+    print_header("Restarting ADCL...")
+
+    # First, remove MCP containers that might be on the network
+    print_info("Removing MCP containers...")
+    mcp_containers = subprocess.run(
+        "docker ps -a --format '{{.Names}}' | grep '^mcp-' || true",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if mcp_containers.stdout.strip():
+        for container in mcp_containers.stdout.strip().split('\n'):
+            if container:
+                subprocess.run(["docker", "rm", "-f", container], capture_output=True)
+        print_success("MCP containers removed")
+
+    # Remove vulhub containers that might be on the network
+    print_info("Removing Vulhub containers...")
+    vulhub_containers = subprocess.run(
+        "docker ps -a --format '{{.Names}}' | grep 'vulhub-' || true",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if vulhub_containers.stdout.strip():
+        for container in vulhub_containers.stdout.strip().split('\n'):
+            if container:
+                subprocess.run(["docker", "rm", "-f", container], capture_output=True)
+        print_success("Vulhub containers removed")
+
+    # Remove trigger containers that might be on the network
+    print_info("Removing Trigger containers...")
+    trigger_containers = subprocess.run(
+        "docker ps -a --format '{{.Names}}' | grep '^trigger-' || true",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if trigger_containers.stdout.strip():
+        for container in trigger_containers.stdout.strip().split('\n'):
+            if container:
+                subprocess.run(["docker", "rm", "-f", container], capture_output=True)
+        print_success("Trigger containers removed")
+
+    # Stop core services
+    print_info("Stopping core services...")
+    subprocess.run(["docker-compose", "down"], cwd=BASE_DIR)
+
+    # Also stop dist-community/ containers (may exist from previous builds)
+    # Always check for and force-remove community edition containers
+    print_info("Checking for community edition containers...")
+    community_containers = subprocess.run(
+        "docker ps -a --format '{{.Names}}' | grep 'dist-community_' || true",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if community_containers.stdout.strip():
+        print_info("Stopping community edition containers...")
+        for container in community_containers.stdout.strip().split('\n'):
+            if container:
+                subprocess.run(["docker", "rm", "-f", container], capture_output=True)
+
+    # Start
+    print_info("Starting services...")
+    result = subprocess.run(
+        ["docker-compose", "up", "-d"],
+        cwd=BASE_DIR
+    )
+
+    if result.returncode == 0:
+        print_success("ADCL restarted")
+
+    return result.returncode
+
+
+def cmd_status(args):
+    """Show service status"""
+    print_header("ADCL Service Status")
+    print("")
+
+    result = subprocess.run(
+        ["docker-compose", "ps"],
+        cwd=BASE_DIR
+    )
+    return result.returncode
+
+
+def cmd_logs(args):
+    """View service logs"""
+    service = args.service if hasattr(args, 'service') else None
+
+    cmd = ["docker-compose", "logs"]
+
+    if args.follow:
+        cmd.append("-f")
+
+    if args.tail:
+        cmd.extend(["--tail", str(args.tail)])
+
+    if service:
+        cmd.append(service)
+
+    result = subprocess.run(cmd, cwd=BASE_DIR)
+    return result.returncode
+
+
+# =============================================================================
+# Airgap Deployment Commands
+# =============================================================================
+
+def cmd_load_images(args):
+    """Load Docker images from tarball (airgap deployment)"""
+    print_header("Loading Docker images for airgap deployment...")
+
+    tarball_path = Path(args.tarball)
+    if not tarball_path.exists():
+        print_error(f"Tarball not found: {tarball_path}")
+        print_info("Usage: ./adcl load-images <tarball-path>")
+        print_info("Example: ./adcl load-images ./images/adcl-1.0.0.tar")
+        return 1
+
+    script = BASE_DIR / "scripts" / "load-images.sh"
+    if not script.exists():
+        print_error(f"Load script not found: {script}")
+        return 1
+
+    print_info(f"Loading images from {tarball_path}...")
+    result = subprocess.run([str(script), str(tarball_path)], cwd=BASE_DIR)
+
+    if result.returncode == 0:
+        print("")
+        print_success("Images loaded successfully!")
+        print_info("You can now start ADCL with: ./adcl start")
+
+    return result.returncode
+
+
+# =============================================================================
+# Maintenance Commands
+# =============================================================================
+
+def cmd_clean(args):
+    """Stop and remove containers, networks, and volumes"""
+    print_header("Cleaning ADCL deployment...")
+    print_warning("This will remove all containers, networks, and volumes")
+    print_warning("All data will be lost!")
+    print("")
+
+    confirm = input("Are you sure? [y/N]: ")
+    if confirm.lower() not in ['y', 'yes']:
+        print_info("Cancelled")
+        return 0
+
+    result = subprocess.run(
+        ["docker-compose", "down", "-v"],
+        cwd=BASE_DIR
+    )
+
+    if result.returncode == 0:
+        print_success("Cleanup complete")
+        print_info("To start fresh: ./adcl start")
+
+    return result.returncode
+
+
+def cmd_update(args):
+    """Pull latest images and restart"""
+    print_header("Updating ADCL...")
+
+    # Pull latest images
+    print_info("Pulling latest images...")
+    result = subprocess.run(
+        ["docker-compose", "pull"],
+        cwd=BASE_DIR
+    )
+
+    if result.returncode != 0:
+        print_error("Failed to pull images")
+        return result.returncode
+
+    # Restart services
+    print_info("Restarting services...")
+    subprocess.run(["docker-compose", "down"], cwd=BASE_DIR)
+    result = subprocess.run(["docker-compose", "up", "-d"], cwd=BASE_DIR)
+
+    if result.returncode == 0:
+        print_success("ADCL updated successfully!")
+
+    return result.returncode
+
+
+# =============================================================================
+# Main CLI
+# =============================================================================
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='ADCL - AI-Driven Command Line',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  ./adcl start                      Start ADCL services
+  ./adcl stop                       Stop ADCL services
+  ./adcl restart                    Restart ADCL services
+  ./adcl status                     Show service status
+  ./adcl logs                       View all logs
+  ./adcl logs -f                    Follow logs
+  ./adcl logs orchestrator          View backend logs
+  ./adcl update                     Pull latest images and restart
+  ./adcl load-images <tarball>      Load images for airgap deployment
+  ./adcl clean                      Remove all containers and data
+
+For cloud-connected deployments:
+  1. Start ADCL:     ./adcl start
+  2. Check status:   ./adcl status
+  3. View logs:      ./adcl logs -f
+
+For airgap deployments:
+  1. Load images:    ./adcl load-images ./images/adcl-1.0.0.tar
+  2. Start ADCL:     ./adcl start
+  3. Check status:   ./adcl status
+        '''
+    )
+
+    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
+
+    # Service commands
+    start_parser = subparsers.add_parser('start', help='Start ADCL services')
+    start_parser.add_argument('--no-pull', action='store_true', help='Skip pulling images')
+    start_parser.set_defaults(func=cmd_start)
+
+    stop_parser = subparsers.add_parser('stop', help='Stop ADCL services')
+    stop_parser.set_defaults(func=cmd_stop)
+
+    restart_parser = subparsers.add_parser('restart', help='Restart ADCL services')
+    restart_parser.set_defaults(func=cmd_restart)
+
+    status_parser = subparsers.add_parser('status', help='Show service status')
+    status_parser.set_defaults(func=cmd_status)
+
+    logs_parser = subparsers.add_parser('logs', help='View logs')
+    logs_parser.add_argument('service', nargs='?', help='Service name (optional)')
+    logs_parser.add_argument('-f', '--follow', action='store_true', help='Follow log output')
+    logs_parser.add_argument('--tail', type=int, help='Number of lines to show')
+    logs_parser.set_defaults(func=cmd_logs)
+
+    # Airgap deployment
+    load_parser = subparsers.add_parser('load-images', help='Load images from tarball (airgap)')
+    load_parser.add_argument('tarball', help='Path to image tarball')
+    load_parser.set_defaults(func=cmd_load_images)
+
+    # Maintenance
+    update_parser = subparsers.add_parser('update', help='Pull latest images and restart')
+    update_parser.set_defaults(func=cmd_update)
+
+    clean_parser = subparsers.add_parser('clean', help='Remove all containers and data')
+    clean_parser.set_defaults(func=cmd_clean)
+
+    # Parse and execute
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        return 1
+
+    if hasattr(args, 'func'):
+        return args.func(args)
+    else:
+        parser.print_help()
+        return 1
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print_warning("\nInterrupted by user")
+        sys.exit(130)
+    except Exception as e:
+        print_error(f"Error: {e}")
+        sys.exit(1)

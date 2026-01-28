@@ -1,0 +1,41 @@
+{
+  "version": "2.0",
+  "packages": {
+    "agent": {
+      "name": "agent",
+      "version": "1.0.0",
+      "installed_at": "2026-01-27T00:00:00+00:00",
+      "installed_from": "default",
+      "dependencies_installed": [],
+      "transaction_id": "bootstrap-001",
+      "metadata": null
+    },
+    "file_tools": {
+      "name": "file_tools",
+      "version": "1.0.0",
+      "installed_at": "2026-01-27T00:00:00+00:00",
+      "installed_from": "default",
+      "dependencies_installed": [],
+      "transaction_id": "bootstrap-001",
+      "metadata": null
+    },
+    "history": {
+      "name": "history",
+      "version": "1.0.0",
+      "installed_at": "2026-01-27T00:00:00+00:00",
+      "installed_from": "default",
+      "dependencies_installed": [],
+      "transaction_id": "bootstrap-001",
+      "metadata": null
+    },
+    "daily-scan": {
+      "name": "daily-scan",
+      "version": "1.0.0",
+      "installed_at": "2026-01-27T00:00:00+00:00",
+      "installed_from": "default",
+      "dependencies_installed": [],
+      "transaction_id": "bootstrap-001",
+      "metadata": null
+    }
+  }
+}
