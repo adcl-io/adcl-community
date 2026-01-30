@@ -1,0 +1,51 @@
+# ADCL Orchestrator Configuration
+# Manages agent execution, workflows, and MCP lifecycle
+
+orchestrator:
+  port: 8000
+  host: "0.0.0.0"
+
+# Paths (Orchestrator's own directories)
+paths:
+  agent_definitions: "/app/agent-definitions"
+  agent_teams: "/app/agent-teams"
+  workflows: "/app/workflows"
+  registries_conf: "/app/registries.conf"
+  logs: "/app/logs"
+  logs_shared: "/app/logs_shared"
+  mcp_servers: "/app/mcp_servers"
+  workspace_shared: "/app/workspace_shared"
+
+# Docker Configuration (for managing MCP containers)
+docker:
+  socket_path: "unix:///var/run/docker.sock"
+  network_name: "mcp-network"
+  network_driver: "bridge"
+  host_internal: "host.docker.internal"
+  stop_timeout: 10
+
+# HTTP Client Configuration
+http:
+  timeouts:
+    default: 10.0
+    health_check: 5.0
+    long_running: 600.0
+
+# LLM Configuration
+llm:
+  max_tokens: 4096
+
+# Auto-install Configuration
+# Note: kali removed from auto-install due to long build time (build manually when needed)
+auto_install:
+  mcps:
+    - "agent"
+    - "file_tools"
+    - "nmap_recon"
+    - "history"
+
+# Polling Configuration
+polling:
+  interval: 2.0
+  short_interval: 0.1
+  supervisor_interval: 10.0

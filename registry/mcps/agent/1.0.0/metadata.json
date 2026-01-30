@@ -1,0 +1,18 @@
+{
+  "package_type": "mcp",
+  "name": "agent",
+  "version": "1.0.0",
+  "created_at": "2025-10-17T14:50:58.684649",
+  "publisher": "unknown",
+  "description": "AI Agent with think/code/review capabilities",
+  "checksum": {
+    "sha256": "",
+    "md5": ""
+  },
+  "signature": {
+    "signed": false,
+    "signer": null,
+    "timestamp": null
+  },
+  "migrated_from": "registry-server/registries"
+}

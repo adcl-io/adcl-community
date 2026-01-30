@@ -1,0 +1,130 @@
+{
+  "workflow_id": "full-reconnaissance-and-vulnerability-assessment",
+  "name": "Full Reconnaissance and Vulnerability Assessment",
+  "description": "Comprehensive network reconnaissance with vulnerability scanning and AI-powered analysis",
+  "nodes": [
+    {
+      "node_id": "full-recon",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "vulnerability-scan",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "analyze-security",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "generate-remediation-plan",
+      "agent_id": "code-reviewer",
+      "timeout": 3600,
+      "position": {
+        "x": 100,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "save-full-report",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 400,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "save-remediation-script",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 700,
+        "y": 300
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "full-recon",
+      "to": "vulnerability-scan",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "vulnerability-scan",
+      "to": "analyze-security",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "analyze-security",
+      "to": "generate-remediation-plan",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "generate-remediation-plan",
+      "to": "save-full-report",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "generate-remediation-plan",
+      "to": "save-remediation-script",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "New Agent",
+  "description": "A new autonomous agent",
+  "persona": {
+    "role": "General Purpose Agent",
+    "expertise": [],
+    "behavior": "",
+    "system_prompt": ""
+  },
+  "available_mcps": [],
+  "capabilities": {
+    "autonomous": true,
+    "max_iterations": 10,
+    "can_loop": true,
+    "requires_approval": false
+  },
+  "model_config": {
+    "model": "hermes3",
+    "temperature": 0.7,
+    "max_tokens": 4096
+  },
+  "tags": [],
+  "author": "",
+  "version": "1.0.0",
+  "id": "new-agent-1"
+}

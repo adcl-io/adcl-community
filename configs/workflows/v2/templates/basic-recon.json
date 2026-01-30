@@ -1,0 +1,54 @@
+{
+  "template_id": "basic-recon",
+  "name": "Basic Reconnaissance",
+  "description": "Simple network reconnaissance workflow using ping sweep and nmap scan",
+  "category": "pentesting",
+  "tags": ["recon", "nmap", "network", "beginner"],
+  "version": "1.0.0",
+  "author": "adcl.io",
+  "workflow": {
+    "workflow_id": "basic-recon-template",
+    "version": "2.0",
+    "ui_metadata": {
+      "zoom": 1.0,
+      "viewport": {"x": 0, "y": 0}
+    },
+    "nodes": [
+      {
+        "node_id": "trigger-1",
+        "node_type": "trigger",
+        "label": "Manual Trigger",
+        "trigger_type": "manual",
+        "position": {"x": 100, "y": 100}
+      },
+      {
+        "node_id": "ping-sweep",
+        "node_type": "agent",
+        "agent_id": "nmap-ping-sweep",
+        "label": "Ping Sweep",
+        "timeout": 300,
+        "position": {"x": 100, "y": 250}
+      },
+      {
+        "node_id": "nmap-scan",
+        "node_type": "agent",
+        "agent_id": "nmap-port-scan",
+        "label": "Port Scan",
+        "timeout": 600,
+        "position": {"x": 100, "y": 400}
+      },
+      {
+        "node_id": "output-1",
+        "node_type": "output",
+        "label": "Scan Results",
+        "format": "json",
+        "position": {"x": 100, "y": 550}
+      }
+    ],
+    "edges": [
+      {"from": "trigger-1", "to": "ping-sweep"},
+      {"from": "ping-sweep", "to": "nmap-scan"},
+      {"from": "nmap-scan", "to": "output-1"}
+    ]
+  }
+}

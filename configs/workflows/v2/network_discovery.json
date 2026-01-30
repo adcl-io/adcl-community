@@ -1,0 +1,70 @@
+{
+  "workflow_id": "network-discovery---find-all-hosts",
+  "name": "Network Discovery - Find All Hosts",
+  "description": "Discover all active hosts on the local network",
+  "nodes": [
+    {
+      "node_id": "discover-hosts",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "analyze-network",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "node_id": "save-discovery",
+      "agent_id": "research-assistant",
+      "timeout": 3600,
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "discover-hosts",
+      "to": "analyze-network",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "analyze-network",
+      "to": "save-discovery",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Code Review Team",
+  "description": "Collaborative code review and quality assurance",
+  "version": "1.0.1",
+  "agents": [
+    {
+      "name": "Code Analyzer tom",
+      "role": "Code Reviewer",
+      "mcp_server": "agent"
+    },
+    {
+      "name": "Documentation Writer",
+      "role": "Technical Writer",
+      "mcp_server": "file_tools"
+    }
+  ]
+}

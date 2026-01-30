@@ -1,0 +1,29 @@
+{
+  "workflow_id": "discovery-scan",
+  "name": "Network Discovery",
+  "description": "Comprehensive multi-method host discovery using masscan, arp-scan, ping sweep, netdiscover, and nmap for complete network mapping.",
+  "nodes": [
+    {
+      "node_id": "discovery",
+      "agent_id": "discovery-agent",
+      "timeout": 300,
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 200,
+        "height": 150
+      }
+    }
+  ],
+  "edges": [],
+  "version": "2.0",
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

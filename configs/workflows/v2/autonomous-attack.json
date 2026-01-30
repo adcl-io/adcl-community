@@ -1,0 +1,90 @@
+{
+  "workflow_id": "autonomous-attack",
+  "name": "AI-Powered Autonomous Attack",
+  "description": "Smart attack workflow: Fast Recon → AI CVE Analysis → Adaptive Exploitation. Works on any target, no slow scans.",
+  "version": "2.0",
+
+  "nodes": [
+    {
+      "node_id": "recon",
+      "node_type": "agent",
+      "config": {
+        "agent_id": "fast-recon-agent",
+        "timeout": 600
+      },
+      "label": "Fast Reconnaissance",
+      "description": "Quick service discovery without slow scans",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "ui": {
+        "width": 220,
+        "height": 160
+      }
+    },
+
+    {
+      "node_id": "analyze",
+      "node_type": "agent",
+      "config": {
+        "agent_id": "cve-analyzer-agent",
+        "timeout": 600
+      },
+      "label": "AI CVE Analysis",
+      "description": "Use Claude's knowledge to match services to CVEs",
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "ui": {
+        "width": 220,
+        "height": 160
+      }
+    },
+
+    {
+      "node_id": "exploit",
+      "node_type": "agent",
+      "config": {
+        "agent_id": "smart-exploit-agent",
+        "timeout": 900
+      },
+      "label": "Smart Exploitation",
+      "description": "Adaptive exploit execution based on discovered CVEs",
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "ui": {
+        "width": 220,
+        "height": 160
+      }
+    }
+  ],
+
+  "edges": [
+    {
+      "from": "recon",
+      "to": "analyze",
+      "ui": {
+        "animated": true
+      }
+    },
+    {
+      "from": "analyze",
+      "to": "exploit",
+      "ui": {
+        "animated": true
+      }
+    }
+  ],
+
+  "ui_metadata": {
+    "zoom": 1.0,
+    "viewport": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

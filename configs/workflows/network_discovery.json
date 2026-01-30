@@ -1,0 +1,44 @@
+{
+  "name": "Network Discovery - Find All Hosts",
+  "description": "Discover all active hosts on the local network",
+  "nodes": [
+    {
+      "id": "discover-hosts",
+      "type": "mcp_call",
+      "mcp_server": "nmap_recon",
+      "tool": "network_discovery",
+      "params": {
+        "network": "${env:DEFAULT_SCAN_NETWORK}"
+      }
+    },
+    {
+      "id": "analyze-network",
+      "type": "mcp_call",
+      "mcp_server": "agent",
+      "tool": "think",
+      "params": {
+        "prompt": "Analyze this network discovery scan:\n\n${discover-hosts}\n\nProvide: 1) Summary of discovered hosts, 2) Network topology insights, 3) Notable devices or patterns, 4) Security recommendations"
+      }
+    },
+    {
+      "id": "save-discovery",
+      "type": "mcp_call",
+      "mcp_server": "file_tools",
+      "tool": "write_file",
+      "params": {
+        "path": "network_discovery_report.txt",
+        "content": "=== NETWORK DISCOVERY REPORT ===\n\n## Discovered Hosts\n${discover-hosts}\n\n## AI Analysis\n${analyze-network.reasoning}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "discover-hosts",
+      "target": "analyze-network"
+    },
+    {
+      "source": "analyze-network",
+      "target": "save-discovery"
+    }
+  ]
+}

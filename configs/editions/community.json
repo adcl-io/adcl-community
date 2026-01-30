@@ -1,0 +1,155 @@
+{
+  "version": "2.1",
+  "edition": "community",
+  "description": "ADCL Community Edition - Core platform features only (open source)",
+  "metadata": {
+    "created_at": "2025-01-20T00:00:00Z",
+    "updated_at": "2025-01-20T00:00:00Z",
+    "created_by": "adcl-system",
+    "updated_by": "adcl-system",
+    "changelog": [
+      {
+        "version": "2.1",
+        "date": "2025-01-20T00:00:00Z",
+        "author": "adcl-system",
+        "changes": [
+          "Added version control metadata structure",
+          "Enhanced configuration tracking"
+        ]
+      },
+      {
+        "version": "2.0",
+        "date": "2025-01-19T00:00:00Z", 
+        "author": "adcl-system",
+        "changes": [
+          "Initial community edition configuration"
+        ]
+      }
+    ],
+    "schema_version": "2.1",
+    "git_tracking": {
+      "enabled": true,
+      "auto_commit": false,
+      "commit_message_template": "feat: Update {edition} edition configuration"
+    }
+  },
+
+  "features": {
+    "core_platform": {
+      "enabled": true,
+      "locked": true,
+      "description": "Core platform - agents, teams, workflows, models",
+      "package_category": "core",
+      "components": {
+        "agents": true,
+        "teams": true,
+        "workflows": true,
+        "models": true,
+        "playground": true,
+        "history": true,
+        "mcp_registry": true
+      }
+    },
+    "red_team": {
+      "enabled": false,
+      "locked": false,
+      "description": "Red Team features - attack playground, dashboard, security tools",
+      "package_category": "security",
+      "components": {
+        "attack_playground": false,
+        "red_team_dashboard": false,
+        "vulnerability_scanning": false,
+        "exploit_validation": false,
+        "recon_tools": false
+      }
+    },
+    "dev_tools": {
+      "enabled": false,
+      "locked": false,
+      "description": "Development and testing tools",
+      "package_category": "dev-tools",
+      "components": {
+        "playwright": false,
+        "custom_testing": false
+      }
+    }
+  },
+
+  "auto_install": {
+    "enabled": true,
+    "packages": {
+      "agent": {
+        "enabled": true,
+        "required": true,
+        "priority": 1,
+        "category": "core",
+        "description": "AI agent runtime - required for agent execution"
+      },
+      "file_tools": {
+        "enabled": true,
+        "required": true,
+        "priority": 2,
+        "category": "core",
+        "description": "File operations MCP - required for agent file access"
+      },
+      "history": {
+        "enabled": true,
+        "required": true,
+        "priority": 3,
+        "category": "core",
+        "description": "Conversation history - required for agent memory"
+      },
+      "nmap_recon": {
+        "enabled": false,
+        "required": false,
+        "priority": 10,
+        "category": "security",
+        "description": "Network reconnaissance and scanning (Red Team only)"
+      },
+      "kali": {
+        "enabled": false,
+        "required": false,
+        "priority": 11,
+        "category": "security",
+        "description": "Kali Linux penetration testing tools (Red Team only)"
+      },
+      "zap": {
+        "enabled": false,
+        "required": false,
+        "priority": 12,
+        "category": "security",
+        "description": "OWASP ZAP web application scanner (Red Team only)"
+      },
+      "playwright": {
+        "enabled": false,
+        "required": false,
+        "priority": 20,
+        "category": "dev-tools",
+        "description": "Browser automation for UI testing"
+      }
+    }
+  },
+
+  "custom_tools": {
+    "enabled": true,
+    "max_tools": 10,
+    "allowed_types": ["mcp", "script"],
+    "allowed_sources": ["url", "file"],
+    "auto_approval": false,
+    "validation": {
+      "required": true,
+      "security_scan": false,
+      "dependency_check": true
+    },
+    "storage": {
+      "base_path": "/workspace/custom_tools",
+      "max_size_mb": 200,
+      "backup_enabled": false
+    },
+    "integration": {
+      "registry_enabled": false,
+      "mcp_auto_register": true,
+      "docker_isolation": false
+    }
+  }
+}

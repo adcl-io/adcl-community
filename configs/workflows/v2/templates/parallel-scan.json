@@ -1,0 +1,85 @@
+{
+  "template_id": "parallel-scan",
+  "name": "Parallel Security Scan",
+  "description": "Runs multiple security scanners in parallel and merges results for comprehensive coverage",
+  "category": "pentesting",
+  "tags": ["parallel", "nmap", "vulnerability", "merge"],
+  "version": "1.0.0",
+  "author": "adcl.io",
+  "workflow": {
+    "workflow_id": "parallel-scan-template",
+    "version": "2.0",
+    "ui_metadata": {
+      "zoom": 0.8,
+      "viewport": {"x": 0, "y": 0}
+    },
+    "nodes": [
+      {
+        "node_id": "trigger-1",
+        "node_type": "trigger",
+        "label": "Manual Trigger",
+        "trigger_type": "manual",
+        "position": {"x": 200, "y": 50}
+      },
+      {
+        "node_id": "nmap-scan",
+        "node_type": "agent",
+        "agent_id": "nmap-comprehensive",
+        "label": "Nmap Scan",
+        "timeout": 600,
+        "position": {"x": 50, "y": 200}
+      },
+      {
+        "node_id": "vuln-scan",
+        "node_type": "agent",
+        "agent_id": "vulnerability-scanner",
+        "label": "Vulnerability Scan",
+        "timeout": 900,
+        "position": {"x": 200, "y": 200}
+      },
+      {
+        "node_id": "web-scan",
+        "node_type": "agent",
+        "agent_id": "web-app-scanner",
+        "label": "Web App Scan",
+        "timeout": 1200,
+        "position": {"x": 350, "y": 200}
+      },
+      {
+        "node_id": "merge-results",
+        "node_type": "utility",
+        "utility_type": "merge",
+        "label": "Merge Results",
+        "utility_config": {
+          "wait_for": "all"
+        },
+        "position": {"x": 200, "y": 350}
+      },
+      {
+        "node_id": "analyze",
+        "node_type": "agent",
+        "agent_id": "result-analyzer",
+        "label": "Analyze Findings",
+        "timeout": 300,
+        "position": {"x": 200, "y": 500}
+      },
+      {
+        "node_id": "output-1",
+        "node_type": "output",
+        "label": "Comprehensive Report",
+        "format": "json",
+        "position": {"x": 200, "y": 650}
+      }
+    ],
+    "edges": [
+      {"from": "trigger-1", "to": "nmap-scan"},
+      {"from": "trigger-1", "to": "vuln-scan"},
+      {"from": "trigger-1", "to": "web-scan"},
+      {"from": "nmap-scan", "to": "merge-results"},
+      {"from": "vuln-scan", "to": "merge-results"},
+      {"from": "web-scan", "to": "merge-results"},
+      {"from": "merge-results", "to": "analyze"},
+      {"from": "analyze", "to": "output-1"}
+    ]
+  }
+}
